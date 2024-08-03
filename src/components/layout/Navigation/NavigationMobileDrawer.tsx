@@ -14,7 +14,7 @@ const NavigationMobileDrawer: React.FC<{ categories: string[] }> = ({
         <img src="/icons/three-lines-icon.svg" alt="Menu" />
       </button>
 
-      <img src="/icons/three-lines-icon.svg" alt="Menu" />
+      <img src="/icons/three-lines-icon.svg" alt="Menu" className="hidden md:block" />
       <Transition show={isOpen} as={Fragment}>
         <Dialog
           as="div"
