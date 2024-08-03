@@ -4,42 +4,40 @@
 import React from "react";
 import FeatureCard from "./FeatureCard";
 
-const featuresData = [
+const featureData = [
   {
+    color: "#F78F1E",
     icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/6de1520950407a5b76e5419183cf509df746674ec5adcb3f56fef0fc7bbb4099?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595",
     title: "Subscribe Products",
     description: "Choose From Eligible Products And Subscribe Products",
-    color: "amber",
   },
   {
+    color: "#B90044",
     icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/73aed4ba303fb63f4a3b6834d44e126ea0018abacf784fcb85b33b5d42920139?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595",
     title: "Express Delivery",
     description: "Express Delivery as soon as possible",
-    color: "rose",
   },
   {
+    color: "#03ADEB",
     icon: "https://cdn.builder.io/api/v1/image/assets/TEMP/34d052ffc33e1c11f44a1f7a16065e971e274b4b9624ee7be45459253ff56e51?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595",
     title: "Reorder",
     description: "Reorder the same your items",
-    color: "sky",
   },
 ];
 
-const Features: React.FC = () => {
+const FeatureCards: React.FC = () => {
   return (
-    <div className="self-center px-5 mt-8 w-full max-w-[1675px] max-md:max-w-full">
-      <div className="flex gap-5 max-md:flex-col">
-        {featuresData.map((feature, index) => (
-          <div
-            key={index}
-            className="flex flex-col w-[33%] max-md:ml-0 max-md:w-full"
-          >
-            <FeatureCard {...feature} />
-          </div>
-        ))}
-      </div>
-    </div>
+    <section className="flex gap-5 max-md:flex-col max-w-[1675px] mx-auto mt-4">
+      {featureData.map((feature, index) => (
+        <div
+          key={index}
+          className="flex flex-col w-[33%] max-md:ml-0 max-md:w-full"
+        >
+          <FeatureCard {...feature} />
+        </div>
+      ))}
+    </section>
   );
 };
 
-export default Features;
+export default FeatureCards;
