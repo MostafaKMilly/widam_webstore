@@ -3,6 +3,7 @@ import FeatureCards from "@/components/home/FeatureCards/FeatureCards";
 import MeetCategory from "@/components/home/MeatCategory/MeatCategoryPage";
 import ShopByCategory from "@/components/home/ShopByCategory/ShopByCategory";
 import SubscriptionProducts from "@/components/home/SubscriptionProducts/SubscriptionProducts";
+import LocationSelection from "@/components/LocationSelection/LocationSelection";
 import React from "react";
 
 function HomePage() {
@@ -15,6 +16,7 @@ function HomePage() {
       </div>
       <MeetCategory />
       <SubscriptionProducts />
+      <LocationSelection />
     </div>
   );
 }
