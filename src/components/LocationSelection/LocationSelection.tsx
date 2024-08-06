@@ -18,14 +18,14 @@ const LocationSelection: React.FC = () => {
           Choose your location
         </h1>
         <div className="flex relative z-10 flex-col px-6 py-6 mt-4 w-full rounded-none min-h-[738px] max-md:pl-5 max-md:max-w-full">
-          <GoogleMapsEmbed
+        {/*   <GoogleMapsEmbed
             apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY as string}
             height={400}
             width="100%"
             mode="view"
             style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"
             center="37.4218,-122.0840"
-          />
+          /> */}
           <LocationInput
             location={location}
             onLocationChange={handleLocationChange}
