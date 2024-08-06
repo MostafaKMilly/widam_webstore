@@ -19,7 +19,7 @@ const LocationSelection: React.FC = () => {
         </h1>
         <div className="flex relative z-10 flex-col px-6 py-6 mt-4 w-full rounded-none min-h-[738px] max-md:pl-5 max-md:max-w-full">
           <GoogleMapsEmbed
-            apiKey="AIzaSyAOrO2OXzOmcTR91AtrAnKSWJwXnfGrJYA"
+            apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY as string}
             height={400}
             width="100%"
             mode="view"
