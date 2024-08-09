@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header/Header";
 import Navigation from "@/components/layout/Navigation/Navigation";
 import Footer from "@/components/layout/Footer/Footer";
+import Script from "next/script";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -22,6 +23,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY}&libraries=places`}
+        />
+      </head>
       <body className={`${montserrat.className} flex flex-col min-h-screen`}>
         <Header />
         <Navigation />
