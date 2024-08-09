@@ -45,16 +45,13 @@ export async function validateCord(
     url.searchParams.append("longitude", longitude.toString());
   }
 
-  const requestOptions: RequestInit = {
-    method: "GET",
-  };
-
   try {
-    const response = await fetch(url.toString(), requestOptions);
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result: ValidateCoordinatesResponse = await response.json();
+
     return result;
   } catch (error) {
     console.error("Error fetching or validating coordinates:", error);

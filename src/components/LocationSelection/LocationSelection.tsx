@@ -4,6 +4,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import LocationInput from "./LocationInput";
 import ActionButtons from "./ActionButtons";
 import { validateCord } from "@/lib/queries/validateCord";
+import { updateGefence } from "@/lib/actions/updateGefence";
 
 const LocationSelection: React.FC = () => {
   const [location, setLocation] = useState("");
@@ -52,10 +53,10 @@ const LocationSelection: React.FC = () => {
           // Validate the new location coordinates
           validateCord(clickedLocation.lat(), clickedLocation.lng()).then(
             (result) => {
-              if (result?.data?.matchedGeofence) {
-                localStorage.setItem(
-                  "geofence_id",
-                  result.data.matchedGeofence.geofence_id
+              if (result?.data) {
+                updateGefence(
+                  result.data.matchedGeofence?.geofence_id ||
+                    result.data.default_address.geofence.geofence_id
                 );
               }
             }
@@ -75,10 +76,7 @@ const LocationSelection: React.FC = () => {
     // Fetch and store the geofence_id for the default location
     validateCord().then((result) => {
       if (result?.data?.default_address?.geofence) {
-        localStorage.setItem(
-          "geofence_id",
-          result.data.default_address.geofence.geofence_id
-        );
+        updateGefence(result.data.default_address.geofence.geofence_id);
 
         // Initialize the map with the default coordinates
         const defaultLatitude = parseFloat(
@@ -130,10 +128,10 @@ const LocationSelection: React.FC = () => {
 
             // Validate the located coordinates
             validateCord(pos.lat, pos.lng).then((result) => {
-              if (result?.data?.matchedGeofence) {
-                localStorage.setItem(
-                  "geofence_id",
-                  result.data.matchedGeofence.geofence_id
+              if (result?.data) {
+                updateGefence(
+                  result.data.matchedGeofence?.geofence_id ||
+                    result.data.default_address.geofence.geofence_id
                 );
               }
             });
@@ -185,10 +183,10 @@ const LocationSelection: React.FC = () => {
             // Validate the new location coordinates
             validateCord(newLocation.lat(), newLocation.lng()).then(
               (result) => {
-                if (result?.data?.matchedGeofence) {
-                  localStorage.setItem(
-                    "geofence_id",
-                    result.data.matchedGeofence.geofence_id
+                if (result?.data) {
+                  updateGefence(
+                    result.data.matchedGeofence?.geofence_id ||
+                      result.data.default_address.geofence.geofence_id
                   );
                 }
               }
