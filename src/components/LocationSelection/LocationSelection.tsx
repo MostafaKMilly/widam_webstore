@@ -222,7 +222,7 @@ const LocationSelection: React.FC = () => {
     <Transition show={isOpen} as={React.Fragment}>
       <Dialog
         as="div"
-        className="relative z-50"
+        className="relative z-[9999]"
         onClose={() => setIsOpen(false)}
       >
         <Transition.Child
