@@ -1,7 +1,7 @@
 "use client";
 import { Dialog, Transition } from "@headlessui/react";
+import { XIcon } from "lucide-react";
 import { Fragment, useState } from "react";
-import { XMarkIcon } from "@heroicons/react/24/solid";
 
 const NavigationMobileDrawer: React.FC<{ categories: string[] }> = ({
   categories,
@@ -36,7 +36,7 @@ const NavigationMobileDrawer: React.FC<{ categories: string[] }> = ({
                   className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-800"
                   onClick={() => setIsOpen(false)}
                 >
-                  <XMarkIcon className="h-6 w-6" />
+                  <XIcon className="h-6 w-6" />
                 </button>
                 <div className="mt-4 space-y-4">
                   {categories.map((category, index) => (

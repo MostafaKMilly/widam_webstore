@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Combobox, ComboboxOption, ComboboxOptions } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/solid";
+import { XIcon } from "lucide-react";
 
 interface LocationInputProps {
   location: string;
@@ -79,7 +79,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
               className="absolute right-4 top-1/2 transform -translate-y-1/2"
               onClick={handleClear}
             >
-              <XMarkIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              <XIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
             </button>
           )}
         </div>

@@ -4,7 +4,7 @@ import { Fragment, useState } from "react";
 import SearchBar from "./SearchBar";
 import DeliveryInfo from "./DeliveryInfo";
 import UserActions from "./UserActions";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
+import { MenuIcon, XIcon } from "lucide-react";
 
 const MobileDrawer: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +15,7 @@ const MobileDrawer: React.FC = () => {
         className="md:hidden p-2 bg-sky-500 text-white rounded"
         onClick={() => setIsOpen(true)}
       >
-        <Bars3Icon className="h-6 w-6" />
+        <MenuIcon className="h-6 w-6" />
       </button>
 
       <Transition show={isOpen} as={Fragment}>
@@ -39,7 +39,7 @@ const MobileDrawer: React.FC = () => {
                   className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-800"
                   onClick={() => setIsOpen(false)}
                 >
-                  <XMarkIcon className="h-6 w-6" />
+                  <XIcon className="h-6 w-6" />
                 </button>
                 <div className="mt-4">
                   <SearchBar />

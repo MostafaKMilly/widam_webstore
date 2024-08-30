@@ -1,16 +1,12 @@
 "use client";
 import React, { useState, Fragment, useEffect } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import {
-  XMarkIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from "@heroicons/react/24/solid"; // Import Heroicons
+import { Dialog, Transition } from "@headlessui/react"; // Import Heroicons
 import Image from "next/image";
 import Slider from "react-slick"; // Import React Slick
 
 import "slick-carousel/slick/slick.css"; // Slick carousel styles
 import "slick-carousel/slick/slick-theme.css";
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react";
 
 // Custom Previous Arrow
 const PrevArrow = ({ onClick }: { onClick?: () => void }) => (
@@ -157,7 +153,7 @@ const BannerBlock: React.FC<BannerBlockProps> = ({ block }) => {
                     onClick={closeModal}
                     className="bg-black rounded-full p-2 flex items-center justify-center"
                   >
-                    <XMarkIcon className="h-4 w-4 text-white" />
+                    <XIcon className="h-4 w-4 text-white" />
                   </button>
                 </div>
 
@@ -190,7 +186,7 @@ const BannerBlock: React.FC<BannerBlockProps> = ({ block }) => {
 
   return (
     <div
-      className="my-4 p-4 rounded"
+      className="p-8 rounded"
       style={{ backgroundColor: block.background || "#fff" }}
     >
       {renderBannerContent()}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
+import { LayoutGrid } from "lucide-react";
 
 interface ItemGroupBlockProps {
   block: {
@@ -30,19 +31,22 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
     : "flex flex-wrap justify-start gap-6";
 
   const itemContainerClasses = isCircle
-    ? "w-24 h-24 rounded-full"
+    ? "rounded-full"
     : isSquare
     ? ""
     : "rounded";
 
-  const containerClasses =
-    block.background !== "#fff" && block.background !== "#ffffff"
-      ? "w-screen -mx-4 px-4 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:-mx-12 lg:px-12 2xl:px-2 2xl:mx-0 2xl:w-full"
-      : "my-4  rounded";
+  // Determine the number of items to show based on the screen size
+  const maxItems =
+    block.title === "Categories"
+      ? 7
+      : block.title === "Meat Court"
+      ? 9
+      : block.data.length;
 
   return (
     <div
-      className={`relative py-4 px-2 ${containerClasses}`}
+      className={`relative py-4 px-8`}
       style={{
         backgroundColor: block.background || "#fff",
         borderColor: block.item_group_background || "#f0f0f0",
@@ -54,10 +58,50 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
         </h2>
       )}
       <div className={gridClasses}>
-        {block.data.map((item) => (
+        {block.data
+          .slice(0, maxItems) // Show only the first 7 items
+          .map((item) => (
+            <Link
+              key={item.item_group_id}
+              href={`/categories/${item.item_group_id}?${
+                item.parameters || ""
+              }`}
+              className={`flex flex-col items-center gap-1 justify-center ${itemContainerClasses}`}
+              style={{
+                ...(isCircle ? { borderRadius: "50%" } : {}),
+              }}
+            >
+              <div
+                className={`relative w-full h-full ${
+                  isCircle ? "rounded-full w-24 h-24" : ""
+                }`}
+                style={{
+                  backgroundColor: block.item_group_background,
+                }}
+              >
+                <Image
+                  src={item.item_group_image}
+                  alt={item.item_group_name}
+                  width={128}
+                  height={128}
+                  className={`${
+                    isCircle
+                      ? "object-contain rounded-full h-full"
+                      : "object-cover max-w-44 w-[128px]"
+                  }`}
+                />
+              </div>
+              {block.show_title_block === 1 &&
+                item.item_group_id !== "All Item Groups" && (
+                  <h3 className="text-center text-sm font-medium mt-2 max-w-[128px] truncate">
+                    {item.item_group_name}
+                  </h3>
+                )}
+            </Link>
+          ))}
+        {block.title === "Categories" && (
           <Link
-            key={item.item_group_id}
-            href={`/categories/${item.item_group_id}?${item.parameters || ""}`}
+            href="/categories"
             className={`flex flex-col items-center gap-1 justify-center ${itemContainerClasses}`}
             style={{
               ...(isCircle ? { borderRadius: "50%" } : {}),
@@ -65,33 +109,27 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
           >
             <div
               className={`relative w-full h-full ${
-                isCircle ? "rounded-full" : ""
+                isCircle ? "rounded-full w-24 h-24" : ""
               }`}
               style={{
                 backgroundColor: block.item_group_background,
               }}
             >
-              <Image
-                src={item.item_group_image}
-                alt={item.item_group_name}
-                width={128}
-                height={128}
-                className={`${
-                  isCircle
-                    ? "object-cover rounded-full h-full"
-                    : "object-cover max-w-44"
+              <div
+                className={`flex items-center justify-center h-full bg-gray-200 w-[128px] ${
+                  isCircle ? "rounded-full" : ""
                 }`}
-              />
+              >
+                <LayoutGrid className="text-[#292D32] w-16 h-16" />
+              </div>
             </div>
-            {!isCircle &&
-              block.show_title_block === 1 &&
-              item.item_group_id !== "All Item Groups" && (
-                <h3 className="text-center text-sm font-medium mt-2">
-                  {item.item_group_name}
-                </h3>
-              )}
+            {block.show_title_block === 1 && (
+              <h3 className="text-center text-sm font-medium mt-2 max-w-[128px] truncate">
+                View All
+              </h3>
+            )}
           </Link>
-        ))}
+        )}
       </div>
     </div>
   );
