@@ -36,7 +36,6 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
     ? ""
     : "rounded";
 
-  // Determine the number of items to show based on the screen size
   const maxItems =
     block.title === "Categories"
       ? 7
@@ -58,47 +57,43 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
         </h2>
       )}
       <div className={gridClasses}>
-        {block.data
-          .slice(0, maxItems) // Show only the first 7 items
-          .map((item) => (
-            <Link
-              key={item.item_group_id}
-              href={`/categories/${item.item_group_id}?${
-                item.parameters || ""
+        {block.data.slice(0, maxItems).map((item) => (
+          <Link
+            key={item.item_group_id}
+            href={`/categories/${item.item_group_id}?${item.parameters || ""}`}
+            className={`flex flex-col items-center gap-1 justify-center ${itemContainerClasses}`}
+            style={{
+              ...(isCircle ? { borderRadius: "50%" } : {}),
+            }}
+          >
+            <div
+              className={`relative w-full h-full ${
+                isCircle ? "rounded-full w-24 h-24" : ""
               }`}
-              className={`flex flex-col items-center gap-1 justify-center ${itemContainerClasses}`}
               style={{
-                ...(isCircle ? { borderRadius: "50%" } : {}),
+                backgroundColor: block.item_group_background,
               }}
             >
-              <div
-                className={`relative w-full h-full ${
-                  isCircle ? "rounded-full w-24 h-24" : ""
+              <Image
+                src={item.item_group_image}
+                alt={item.item_group_name}
+                width={128}
+                height={128}
+                className={`${
+                  isCircle
+                    ? "object-contain rounded-full h-full"
+                    : "object-cover max-w-44 w-[128px]"
                 }`}
-                style={{
-                  backgroundColor: block.item_group_background,
-                }}
-              >
-                <Image
-                  src={item.item_group_image}
-                  alt={item.item_group_name}
-                  width={128}
-                  height={128}
-                  className={`${
-                    isCircle
-                      ? "object-contain rounded-full h-full"
-                      : "object-cover max-w-44 w-[128px]"
-                  }`}
-                />
-              </div>
-              {block.show_title_block === 1 &&
-                item.item_group_id !== "All Item Groups" && (
-                  <h3 className="text-center text-sm font-medium mt-2 max-w-[128px] truncate">
-                    {item.item_group_name}
-                  </h3>
-                )}
-            </Link>
-          ))}
+              />
+            </div>
+            {block.show_title_block === 1 &&
+              item.item_group_id !== "All Item Groups" && (
+                <h3 className="text-center text-sm font-medium mt-2 max-w-[128px] truncate">
+                  {item.item_group_name}
+                </h3>
+              )}
+          </Link>
+        ))}
         {block.title === "Categories" && (
           <Link
             href="/categories"
