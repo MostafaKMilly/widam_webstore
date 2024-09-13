@@ -30,7 +30,6 @@ async function HomePage() {
   return (
     <div className="py-8 max-w-[1680px] mx-auto">
       {layoutData?.data.data.map((block: any) => renderBlock(block))}
-      <LocationSelection />
     </div>
   );
 }

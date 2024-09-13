@@ -6,9 +6,16 @@ import ActionButtons from "./ActionButtons";
 import { validateCord } from "@/lib/queries/validateCord";
 import { updateGefence } from "@/lib/actions/updateGefence";
 
-const LocationSelection: React.FC = () => {
+interface LocationSelectionProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const LocationSelection: React.FC<LocationSelectionProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const [location, setLocation] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
@@ -67,12 +74,6 @@ const LocationSelection: React.FC = () => {
   };
 
   useEffect(() => {
-    // Check if the dialog has been opened before
-    const hasOpened = localStorage.getItem("hasOpenedDialog");
-    if (!hasOpened) {
-      setIsOpen(true);
-    }
-
     // Fetch and store the geofence_id for the default location
     validateCord().then((result) => {
       if (result?.data?.default_address?.geofence) {
@@ -204,8 +205,7 @@ const LocationSelection: React.FC = () => {
       const confirmedLocation = markerRef.current.getPosition();
       console.log("Confirmed location:", confirmedLocation?.toString());
       localStorage.setItem("hasOpenedDialog", "true");
-
-      setIsOpen(false);
+      onClose();
     } else {
       alert("Please select a location before confirming.");
     }
@@ -214,17 +214,12 @@ const LocationSelection: React.FC = () => {
   const handleSkip = () => {
     console.log("User skipped location selection.");
     localStorage.setItem("hasOpenedDialog", "true");
-
-    setIsOpen(false);
+    onClose();
   };
 
   return (
     <Transition show={isOpen} as={React.Fragment}>
-      <Dialog
-        as="div"
-        className="relative z-[9999]"
-        onClose={() => setIsOpen(false)}
-      >
+      <Dialog as="div" className="relative z-[9999]" onClose={onClose}>
         <Transition.Child
           as={React.Fragment}
           enter="ease-out duration-300"

@@ -1,0 +1,19 @@
+.categoryLink {
+  position: relative;
+  display: inline-block; /* Ensures the element's width fits its content */
+}
+
+.categoryLink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -22px; /* Adjust as needed */
+  width: 0%;
+  height: 2px; /* Thickness of the underline */
+  background-color: currentColor; /* Uses the text color */
+  transition: width 0.3s ease;
+}
+
+.categoryLinkParent:hover .categoryLink::after {
+  width: 100%;
+}

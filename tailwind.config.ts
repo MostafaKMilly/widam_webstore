@@ -9,6 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        primary: "#0055BB",
         skyBlue: "#10B0EB",
         gray: "#707070",
         darkCyan: "rgb(51, 89, 103)",

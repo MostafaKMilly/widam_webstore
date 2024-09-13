@@ -2,8 +2,16 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { XIcon } from "lucide-react";
 import { Fragment, useState } from "react";
+import Link from "next/link";
 
-const NavigationMobileDrawer: React.FC<{ categories: string[] }> = ({
+interface Category {
+  item_group_id: string;
+  item_group_name: string;
+  item_group_image: string | null;
+  is_group: number;
+}
+
+const NavigationMobileDrawer: React.FC<{ categories: Category[] }> = ({
   categories,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +22,6 @@ const NavigationMobileDrawer: React.FC<{ categories: string[] }> = ({
         <img src="/icons/three-lines-icon.svg" alt="Menu" />
       </button>
 
-      <img src="/icons/three-lines-icon.svg" alt="Menu" className="hidden md:block" />
       <Transition show={isOpen} as={Fragment}>
         <Dialog
           as="div"
@@ -31,21 +38,32 @@ const NavigationMobileDrawer: React.FC<{ categories: string[] }> = ({
               leaveFrom="translate-x-0"
               leaveTo="translate-x-full"
             >
-              <Dialog.Panel className="relative w-full bg-white p-6 shadow-lg">
+              <Dialog.Panel className="relative w-full max-w-xs bg-white p-6 shadow-lg">
+                {/* Close button */}
                 <button
                   className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-800"
                   onClick={() => setIsOpen(false)}
                 >
                   <XIcon className="h-6 w-6" />
                 </button>
+                {/* Category list */}
                 <div className="mt-4 space-y-4">
-                  {categories.map((category, index) => (
-                    <div
-                      key={index}
-                      className="text-xl font-semibold text-sky-900 capitalize"
+                  {categories.map((category) => (
+                    <Link
+                      key={category.item_group_id}
+                      href={`/categories/${category.item_group_id}`}
+                      className="flex items-center space-x-4 text-xl font-semibold text-sky-900 capitalize"
+                      onClick={() => setIsOpen(false)}
                     >
-                      {category}
-                    </div>
+                      {category.item_group_image && (
+                        <img
+                          src={category.item_group_image}
+                          alt={category.item_group_name}
+                          className="w-8 h-8 object-cover"
+                        />
+                      )}
+                      <span>{category.item_group_name}</span>
+                    </Link>
                   ))}
                 </div>
               </Dialog.Panel>

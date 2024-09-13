@@ -12,7 +12,7 @@ const MobileDrawer: React.FC = () => {
   return (
     <>
       <button
-        className="md:hidden p-2 bg-sky-500 text-white rounded"
+        className="md:hidden p-2 bg-primary text-white rounded"
         onClick={() => setIsOpen(true)}
       >
         <MenuIcon className="h-6 w-6" />
