@@ -1,56 +1,74 @@
+// Header.tsx
+
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { Menu, MenuButton } from "@headlessui/react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { SubCategory } from "@/lib/queries/getItemGroups";
 
-const tabs = [
-  { id: 1, label: "Beef Meat" },
-  { id: 2, label: "Chicken" },
-  { id: 3, label: "Australian Meat" },
-  { id: 4, label: "Camel Meat" },
-  { id: 5, label: "Lamb Meat" },
+interface SortOption {
+  id: number;
+  label: string;
+  sort_by: string;
+  sort_order: "asc" | "desc";
+}
+
+const sortOptions: SortOption[] = [
+  {
+    id: 1,
+    label: "Price High to Low",
+    sort_by: "website_item_price",
+    sort_order: "desc",
+  },
+  {
+    id: 2,
+    label: "Price Low to High",
+    sort_by: "website_item_price",
+    sort_order: "asc",
+  },
+  {
+    id: 3,
+    label: "Name A to Z",
+    sort_by: "website_item_name",
+    sort_order: "asc",
+  },
+  {
+    id: 4,
+    label: "Name Z to A",
+    sort_by: "website_item_name",
+    sort_order: "desc",
+  },
 ];
 
-const sortOptions = [
-  { id: 1, label: "Price High to Low", value: "price_desc" },
-  { id: 2, label: "Price Low to High", value: "price_asc" },
-  { id: 3, label: "Name A to Z", value: "name_asc" },
-  { id: 4, label: "Name Z to A", value: "name_desc" },
-];
+interface HeaderProps {
+  sub_categories: SubCategory[];
+  item_group_id: string;
+  activeTab: string;
+  setActiveTab: (tabId: string) => void;
+  selectedSortOption: SortOption;
+  setSelectedSortOption: (option: SortOption) => void;
+}
 
-const Header: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<number>(1);
-  const [selectedSortOption, setSelectedSortOption] = useState(sortOptions[0]);
-
+const Header: React.FC<HeaderProps> = ({
+  sub_categories,
+  item_group_id,
+  activeTab,
+  setActiveTab,
+  selectedSortOption,
+  setSelectedSortOption,
+}) => {
   return (
-    <header className="flex justify-between items-center w-full max-md:max-w-full mb-4">
-      {/* Tabs Navigation */}
-      <nav className="flex-1">
-        <ul className="flex justify-start gap-12 ml-8 max-w-full text-xl font-medium text-neutral-500">
-          {tabs.map((tab) => (
-            <li
-              key={tab.id}
-              className={`cursor-pointer py-2 ${
-                activeTab === tab.id
-                  ? "border-b-2 border-sky-500 text-sky-500"
-                  : ""
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </li>
-          ))}
-        </ul>
-      </nav>
-
+    <header className="flex flex-col md:flex-row w-full mb-4">
       {/* Sort By Button with Dropdown */}
-      <Menu as="div" className="relative inline-block text-left">
+      <Menu
+        as="div"
+        className="relative inline-block text-left md:order-2 md:ml-auto mt-2 md:mt-0 px-4 md:px-0"
+      >
         {({ open }) => (
           <>
             <div>
-              <MenuButton className="flex items-center gap-2 px-6 py-3 text-xl font-medium text-white bg-sky-500 rounded-sm max-md:px-5">
+              <MenuButton className="flex items-center gap-2 px-6 py-3 text-xl font-medium text-white bg-sky-500 rounded-sm">
                 <span>Sort By</span>
-
                 {open ? (
                   <ChevronUp className="w-5 h-5 text-white" />
                 ) : (
@@ -67,10 +85,11 @@ const Header: React.FC = () => {
                       <button
                         onClick={() => {
                           setSelectedSortOption(option);
-                          // Implement your sorting logic here
                         }}
                         className={`${
-                          active ? "bg-sky-100 text-sky-900" : "text-gray-700"
+                          active || selectedSortOption.id === option.id
+                            ? "bg-sky-100 text-sky-900"
+                            : "text-gray-700"
                         } block w-full text-left px-4 py-2 text-sm`}
                       >
                         {option.label}
@@ -83,6 +102,27 @@ const Header: React.FC = () => {
           </>
         )}
       </Menu>
+
+      {/* Tabs Navigation */}
+      {item_group_id !== "All Item Groups" && sub_categories?.length > 0 && (
+        <nav className="flex-1 overflow-x-auto md:order-1">
+          <ul className="flex justify-start md:gap-12 gap-4 px-4 md:px-8 text-xl font-medium text-neutral-500 border-b border-[#EFEEEE]">
+            {sub_categories.map((tab) => (
+              <li
+                key={tab.item_group_id}
+                className={`cursor-pointer whitespace-nowrap py-4 ${
+                  activeTab === tab.item_group_id
+                    ? "border-b-2 border-sky-500 text-sky-500"
+                    : ""
+                }`}
+                onClick={() => setActiveTab(tab.item_group_id)}
+              >
+                {tab.item_group_name}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 };

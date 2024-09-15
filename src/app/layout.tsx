@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header/Header";
 import Navigation from "@/components/layout/Navigation/Navigation";
 import Footer from "@/components/layout/Footer/Footer";
 import Script from "next/script";
+import Providers from "./providers";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -31,7 +32,9 @@ export default async function RootLayout({
       <body className={`${montserrat.className} flex flex-col min-h-screen`}>
         <Header />
         <Navigation />
-        <main className="flex-grow">{children}</main>
+        <main className="flex-grow">
+          <Providers>{children}</Providers>
+        </main>
         <Footer />
       </body>
     </html>

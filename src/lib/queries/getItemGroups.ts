@@ -16,7 +16,7 @@ interface GetItemGroupsParams {
   limit?: number;
 }
 
-interface ItemGroupsResponse {
+export interface ItemGroupsResponse {
   status_code: number;
   error: number;
   message: string;
@@ -40,14 +40,14 @@ interface ItemGroupData {
   website_items: WebsiteItem[];
 }
 
-interface SubCategory {
+export interface SubCategory {
   item_group_id: string;
   item_group_name: string;
   item_group_image: string | null;
   is_group: number;
 }
 
-interface WebsiteItem {
+export interface WebsiteItem {
   website_item_id: string;
   website_item_name: string;
   stock_uom: string;
@@ -86,13 +86,7 @@ interface Tag {
 async function getItemGroups(
   params: GetItemGroupsParams
 ): Promise<ItemGroupsResponse> {
-  const geofence_id = await getGefenceId();
-
   const queryParams = new URLSearchParams();
-
-  if (geofence_id) {
-    queryParams.append("geofence_id", geofence_id);
-  }
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
@@ -112,6 +106,7 @@ async function getItemGroups(
   try {
     const response = await fetch(url, requestOptions);
     if (!response.ok) {
+      console.log(response);
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const result: ItemGroupsResponse = await response.json();

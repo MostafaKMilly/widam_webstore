@@ -11,18 +11,7 @@ const categories = [
     item_group_image: "https://widam.akwad.qa/files/Cow604f7e.png",
     is_group: 1,
   },
-  {
-    item_group_id: "IG009",
-    item_group_name: "Bread & Bakery",
-    item_group_image: "https://widam.akwad.qa/files/OK_Bread and Bakery.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG010",
-    item_group_name: "Camel",
-    item_group_image: "https://widam.akwad.qa/files/OK_Camel.png",
-    is_group: 1,
-  },
+
   {
     item_group_id: "IG011",
     item_group_name: "Chicken",
@@ -62,7 +51,7 @@ const categories = [
   },
 ];
 
-const Sidebar: React.FC = () => {
+const Sidebar = ({ resetActiveTab }: { resetActiveTab: () => void }) => {
   const params = useSearchParams();
   const categoryId = params.get("category");
 
@@ -71,6 +60,7 @@ const Sidebar: React.FC = () => {
       <div className="flex flex-col space-y-6">
         <Link
           href={`/categories`}
+          onClick={resetActiveTab}
           className={`relative flex flex-col items-center w-full p-4 transition-all duration-300 ease-in-out`}
         >
           {!categoryId && (
@@ -98,6 +88,7 @@ const Sidebar: React.FC = () => {
             <Link
               key={category.item_group_id}
               href={`/categories?category=${category.item_group_id}`}
+              onClick={resetActiveTab}
               className={`relative flex flex-col items-center w-full p-4 transition-all duration-300 ease-in-out ${
                 isSelected ? "" : ""
               }`}

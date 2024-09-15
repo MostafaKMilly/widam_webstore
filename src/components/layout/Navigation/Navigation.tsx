@@ -8,18 +8,7 @@ const categories = [
     item_group_image: "https://widam.akwad.qa/files/Cow604f7e.png",
     is_group: 1,
   },
-  {
-    item_group_id: "IG009",
-    item_group_name: "Bread & Bakery",
-    item_group_image: "https://widam.akwad.qa/files/OK_Bread and Bakery.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG010",
-    item_group_name: "Camel",
-    item_group_image: "https://widam.akwad.qa/files/OK_Camel.png",
-    is_group: 1,
-  },
+
   {
     item_group_id: "IG011",
     item_group_name: "Chicken",
@@ -49,6 +38,12 @@ const categories = [
     item_group_id: "IG018",
     item_group_name: "Lamb",
     item_group_image: "https://widam.akwad.qa/files/OK_Lamb.png",
+    is_group: 1,
+  },
+  {
+    item_group_id: "IG020",
+    item_group_name: "Offal",
+    item_group_image: "https://widam.akwad.qa/files/OK_Offal May be.png",
     is_group: 1,
   },
 ];

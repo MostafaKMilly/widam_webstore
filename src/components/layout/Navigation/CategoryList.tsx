@@ -12,7 +12,9 @@ interface Category {
 
 const CategoryList: React.FC<{ categories: Category[] }> = ({ categories }) => {
   return (
-    <div className="w-full">
+    <div className="w-full flex items-center gap-4">
+      <img src="/icons/three-lines-icon.svg" alt="three dots icon" />
+
       <div className="flex overflow-x-auto space-x-4 md:hidden px-4">
         <Link
           href={`/categories`}
