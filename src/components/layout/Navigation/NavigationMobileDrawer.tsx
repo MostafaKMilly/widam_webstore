@@ -51,7 +51,7 @@ const NavigationMobileDrawer: React.FC<{ categories: Category[] }> = ({
                   {categories.map((category) => (
                     <Link
                       key={category.item_group_id}
-                      href={`/categories/${category.item_group_id}`}
+                      href={`/categories?category=${category.item_group_id}`}
                       className="flex items-center space-x-4 text-xl font-semibold text-sky-900 capitalize"
                       onClick={() => setIsOpen(false)}
                     >

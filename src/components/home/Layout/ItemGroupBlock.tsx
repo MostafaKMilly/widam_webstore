@@ -60,7 +60,7 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
         {block.data.slice(0, maxItems).map((item) => (
           <Link
             key={item.item_group_id}
-            href={`/categories/${item.item_group_id}?${item.parameters || ""}`}
+            href={`/categories?category=${item.item_group_id}?${item.parameters || ""}`}
             className={`flex flex-col items-center gap-1 justify-center ${itemContainerClasses}`}
             style={{
               ...(isCircle ? { borderRadius: "50%" } : {}),

@@ -20,6 +20,7 @@ const PaymentCards: React.FC = () => {
           alt=""
         />
       </div>
+
       <div className="flex flex-col items-center mt-2 font-medium text-center max-md:max-w-full">
         <img
           loading="lazy"
