@@ -1,6 +1,6 @@
 const SearchBar: React.FC = () => {
   return (
-    <form className="flex flex-wrap gap-3.5 self-stretch px-4 py-3 text-lg bg-white max-w-[801.792px] w-[40vw] rounded-md text-neutral-700 md:px-6">
+    <form className="flex flex-wrap gap-3.5 self-stretch px-4 py-3 text-lg bg-white max-w-[801.792px] w-[35vw] rounded-md text-neutral-700 md:px-6">
       <label htmlFor="searchInput" className="sr-only">
         Search for any product
       </label>

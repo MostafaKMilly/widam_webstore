@@ -1,3 +1,4 @@
+// ItemBlock.tsx
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
@@ -6,6 +7,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import useCartStore from "@/lib/store/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
+import AddNumberDialog from "@/components/RegisterDialogs/AddNumberDialog"; // Import the dialog
+import useUserStore from "@/lib/store/userStore";
 
 interface ItemBlockProps {
   block: {
@@ -55,6 +58,10 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const decrementItem = useCartStore((state) => state.decrementItem);
+  const user = useUserStore((state) => state.user);
+
+  // Dialog state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleIncrement = (item: any) => {
     setCounter((prev) => ({
@@ -82,6 +89,9 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
 
     decrementItem(item.website_item_id);
   };
+
+  const openDialog = () => setIsDialogOpen(true);
+  const closeDialog = () => setIsDialogOpen(false);
 
   return (
     <div
@@ -128,7 +138,7 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
                     </div>
                   )}
 
-                  <div className="absolute top-1 right-1 flex flex-wrap ">
+                  <div className="absolute top-1 right-1 flex  flex-col flex-wrap ">
                     {item.tags.map((tag) => (
                       <div
                         key={tag.id}
@@ -228,7 +238,15 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
                   </AnimatePresence>
                 )}
                 {item.website_item_type === "V" && (
-                  <button className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 right-3">
+                  <button
+                    className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 right-3"
+                    onClick={(e) => {
+                      if (!user) {
+                        e.stopPropagation();
+                        openDialog();
+                      }
+                    }}
+                  >
                     <Settings2 className="text-white w-6 h-6" />
                   </button>
                 )}
@@ -237,6 +255,8 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
           );
         })}
       </div>
+
+      <AddNumberDialog isOpen={isDialogOpen} onClose={closeDialog} />
     </div>
   );
 };

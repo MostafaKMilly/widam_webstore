@@ -10,9 +10,15 @@ const DeliveryInfo: React.FC = async () => {
   if (dateFormatted) {
     const dayOfMonth = dateFormatted.split(",")[1]?.trim().split(" ")[0];
     if (dayOfMonth) {
-      convertedDate = `TOD ${dayOfMonth}`;
+      const currentDay = new Date().getDate();
+      if (parseInt(dayOfMonth) > currentDay) {
+        convertedDate = `TOM ${dayOfMonth}`;
+      } else {
+        convertedDate = `TOD ${dayOfMonth}`;
+      }
     }
   }
+
   return (
     <div className="flex gap-2.5 items-center font-bold leading-5 text-white">
       <DeliverSelection />

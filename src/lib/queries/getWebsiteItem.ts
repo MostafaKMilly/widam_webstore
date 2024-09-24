@@ -8,7 +8,7 @@ interface WebsiteItemResponse {
 }
 
 async function getWebsiteItem(website_item_id: string) {
-  const url = `${process.env.API_BASE_URL}/api/method/widam_delivery.website_item.website_items?website_item_id=${website_item_id}`;
+  const url = `${process.env.API_BASE_URL}/api/method/widam_delivery.website_item.website_items?website_item_id=${website_item_id}&get_attribute_variants=1`;
 
   const requestOptions: RequestInit = {
     method: "GET",
@@ -42,7 +42,7 @@ export type WebsiteItem = {
   description: string;
   short_description: string;
   web_long_description: string;
-  price_modifier_title: string | null;
+  price_modifier_title: any;
   is_express_item: number;
   is_pickup_item: number;
   is_mubadara_item: number;
@@ -50,10 +50,18 @@ export type WebsiteItem = {
   is_price_modifier: number;
   default_variant: number;
   website_template_id: string;
-  tags: string[];
-  additional_images: { image: string }[];
-  website_specifications: any[];
-  website_item_attributes: {
+  tags: Array<{
+    id: string;
+    title: string;
+    icon: string;
+    product_label: number;
+    color: any;
+  }>;
+  additional_images: Array<{
+    image: string;
+  }>;
+  website_specifications: Array<any>;
+  website_item_attributes: Array<{
     attribute_id: string;
     attribute_title: string;
     attribute_style: string;
@@ -61,17 +69,29 @@ export type WebsiteItem = {
       value_id: string;
       value_title: string;
     };
-  }[];
+  }>;
   price: {
     website_item_price: number;
-    discount_title: string | null;
+    discount_title: any;
     discount_percent: number;
     discount_amount: number;
     discounted_price: number;
     currency: string;
   };
   in_stock: number;
-  product_options: any[];
+  product_options: Array<any>;
+  attribute_variants: Array<{
+    attribute_id: string;
+    attribute_title: string;
+    attribute_style: string;
+    attribute_value: Array<{
+      value_id: string;
+      value_title: string;
+      website_item_id: string;
+      icon: string;
+      in_stock: number;
+    }>;
+  }>;
 };
 
 export default getWebsiteItem;

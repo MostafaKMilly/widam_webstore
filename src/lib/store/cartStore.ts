@@ -1,3 +1,4 @@
+// store/cartStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -5,7 +6,7 @@ interface CartItem {
   id: string;
   name: string;
   quantity: number;
-  price: number;
+  price: number; // Ensure price is a number
   image: string;
 }
 
@@ -16,6 +17,7 @@ interface CartState {
   decrementItem: (id: string) => void;
   clearCart: () => void;
   getTotalCount: () => number;
+  getTotalPrice: () => number; // New method
 }
 
 const useCartStore = create<CartState>()(
@@ -61,6 +63,11 @@ const useCartStore = create<CartState>()(
       clearCart: () => set({ items: [] }),
       getTotalCount: () =>
         get().items.reduce((total, item) => total + item.quantity, 0),
+      getTotalPrice: () =>
+        get().items.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0
+        ), // Calculates total price
     }),
     {
       name: "cart-storage", // unique name for localStorage key

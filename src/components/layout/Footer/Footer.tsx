@@ -21,21 +21,23 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row flex-wrap gap-5 justify-between items-start w-full">
             <div className="flex flex-col items-center w-full md:w-auto">
               <QuickLinks title="Quick Links" links={QuickLinksItems} />
-              <div className="flex gap-2 mt-14">
-                <img
-                  loading="lazy"
-                  src="https://cdn.builder.io/api/v1/image/assets/TEMP/ee8fefbd02f6b5f71632374fa675323e71520489aa3af89d4f0a83a30e309179?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595"
-                  alt=""
-                  className="object-contain shrink-0 w-32"
-                />
-                <img
-                  loading="lazy"
-                  src="https://cdn.builder.io/api/v1/image/assets/TEMP/354d9a40d6584edf38e49f98eb53629ea1b797fb17543b9296b8335e20904713?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595"
-                  alt=""
-                  className="object-contain shrink-0 w-32"
-                />
+              <div>
+                <div className="flex gap-2 mt-14">
+                  <img
+                    loading="lazy"
+                    src="https://cdn.builder.io/api/v1/image/assets/TEMP/ee8fefbd02f6b5f71632374fa675323e71520489aa3af89d4f0a83a30e309179?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595"
+                    alt=""
+                    className="object-contain shrink-0 w-32"
+                  />
+                  <img
+                    loading="lazy"
+                    src="https://cdn.builder.io/api/v1/image/assets/TEMP/354d9a40d6584edf38e49f98eb53629ea1b797fb17543b9296b8335e20904713?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595"
+                    alt=""
+                    className="object-contain shrink-0 w-32"
+                  />
+                </div>
+                <ContactButton />
               </div>
-              <ContactButton />
             </div>
             <div className="flex flex-col items-center w-full md:w-auto">
               <SocialIcons />

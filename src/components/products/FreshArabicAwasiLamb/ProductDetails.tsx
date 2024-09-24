@@ -1,28 +1,144 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import CuttingOption from "./CuttingOption";
 import LocationButton from "./LocationButton";
 import QuantitySelector from "./QuantitySelector";
 import AddToCartButton from "./AddToCartButton";
 import { WebsiteItem } from "@/lib/queries/getWebsiteItem";
+import useCartStore from "@/lib/store/cartStore";
+import toast from "react-hot-toast";
 
 const ProductDetails = ({
   websiteItem,
 }: {
   websiteItem: WebsiteItem | undefined;
 }) => {
-  if (!websiteItem) {
-    return <div>Loading...</div>;
-  }
+  console.log(websiteItem);
 
   // Static locations for now
-  const locations = [
-    { name: "Al Wakra", isActive: true },
-    { name: "Al Sailiya", isActive: false },
-  ];
+  const locations = [{ name: "Al Wakra" }, { name: "Al Sailiya" }];
+
+  // State Management
+  const [selectedAttributes, setSelectedAttributes] = useState<{
+    [attributeId: string]: string;
+  }>({});
+  const [selectedLocation, setSelectedLocation] = useState<string>(
+    locations[0].name
+  );
+  const [qid, setQid] = useState<string>("");
+  const [qidFile, setQidFile] = useState<File | null>(null);
+  const [quantity, setQuantity] = useState<number>(websiteItem?.min_qty || 1);
+
+  // Zustand Store
+  const addItem = useCartStore((state) => state.addItem);
+
+  // Handler for selecting attribute variants
+  const handleAttributeSelect = (attributeId: string, valueId: string) => {
+    setSelectedAttributes((prev) => ({
+      ...prev,
+      [attributeId]: valueId,
+    }));
+  };
+
+  // Handler for location selection
+  const handleLocationSelect = (locationName: string) => {
+    setSelectedLocation(locationName);
+  };
+
+  // Handler for QID input
+  const handleQidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQid(e.target.value);
+  };
+
+  // Handler for QID validation
+  const handleQidValidate = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Implement your QID validation logic here
+    console.log("Validating QID:", qid);
+    // Example: Simple validation (length check)
+    if (qid.length === 11) {
+      toast.success("QID is valid.");
+    } else {
+      toast.error("QID must be 11 characters.");
+    }
+  };
+
+  // Handler for file upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setQidFile(e.target.files[0]);
+      console.log("Uploaded file:", e.target.files[0]);
+    }
+  };
+
+  // Handler for Add to Cart
+  const handleAddToCart = () => {
+    // Ensure required selections are made
+    const requiredAttributes = websiteItem?.attribute_variants || [];
+    for (let attr of requiredAttributes) {
+      if (!selectedAttributes[attr.attribute_id]) {
+        toast.error(`Please select a value for ${attr.attribute_title}`);
+        return;
+      }
+    }
+
+    if (!selectedLocation) {
+      toast.error("Please select a pickup location.");
+      return;
+    }
+
+    if (qid.trim() === "") {
+      toast.error("Please enter your QID.");
+      return;
+    }
+
+    if (!qidFile) {
+      toast.error("Please upload a copy of your QID.");
+      return;
+    }
+
+    // Construct a unique ID for the cart item (e.g., website_item_id + selected variants)
+    const variantIds = Object.values(selectedAttributes).join("-");
+    const cartItemId = `${websiteItem?.website_item_id}-${variantIds}`;
+
+    // Find the selected variant to get specific details (like image)
+    // For simplicity, assume one attribute with variants
+    let selectedVariant = null;
+    if (
+      websiteItem?.attribute_variants &&
+      websiteItem.attribute_variants.length > 0
+    ) {
+      const attribute = websiteItem.attribute_variants[0];
+      selectedVariant = attribute.attribute_value.find(
+        (val) => val.value_id === selectedAttributes[attribute.attribute_id]
+      );
+    }
+
+    const itemToAdd = {
+      id: cartItemId,
+      name: websiteItem?.website_item_name!,
+      quantity: quantity,
+      price: websiteItem?.price.website_item_price!,
+      image: selectedVariant
+        ? selectedVariant.icon
+        : websiteItem?.website_item_image!,
+      attributes: selectedAttributes,
+      location: selectedLocation,
+      qid: qid,
+      qidFile: qidFile,
+    };
+
+    addItem(itemToAdd);
+    toast.success("Item added to cart!");
+  };
+
+  if (!websiteItem) {
+    return <div className="text-center py-20">Loading...</div>;
+  }
 
   return (
     <div className="px-20 pt-16 w-full shadow-sm bg-slate-50 max-md:px-5 max-md:pb-5 pb-10 max-md:max-w-full">
-      <main className="flex flex-col lg:flex-row ">
+      <main className="flex flex-col lg:flex-row">
         {/* Left Side */}
         <aside className="lg:w-1/3 flex flex-col gap-6">
           <div className="flex z-10 flex-col justify-center px-9 py-12 max-w-full text-base font-semibold text-white bg-white w-full max-md:px-5">
@@ -33,19 +149,33 @@ const ProductDetails = ({
                 alt={websiteItem.website_item_name}
                 className="object-cover absolute inset-0 size-full"
               />
+
+              {/* Tags Overlay */}
+              <div className="absolute top-2 right-2 flex flex-col space-y-2">
+                {websiteItem.tags.map((tag) => (
+                  <img
+                    key={tag.id}
+                    src={tag.icon}
+                    alt={tag.title}
+                    className="w-6 h-6 mr-2"
+                  />
+                ))}
+              </div>
+
+              {/* Popularity Badge */}
               <div className="relative z-10 px-12 py-5 mt-0 mb-0 max-md:px-5 max-md:mb-2.5">
                 {websiteItem.popularity > 0 ? "Best Seller" : ""}
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             {websiteItem.additional_images.map((img, index) => (
               <img
                 key={index}
                 loading="lazy"
                 src={img.image}
                 alt={`Additional image ${index + 1}`}
-                className="object-contain shrink-0 max-w-full rounded-none aspect-square w-[100px]"
+                className="object-contain shrink-0 max-w-full rounded-none aspect-square w-[100px] max-md:w-24"
               />
             ))}
           </div>
@@ -54,100 +184,165 @@ const ProductDetails = ({
         {/* Right Side */}
         <section className="lg:w-2/3 flex flex-col lg:pl-16 lg:pr-0 max-md:pr-5 max-md:pl-0">
           <div className="flex z-10 flex-col items-start self-end max-w-full w-full lg:w-[775px]">
-            <h1 className="text-4xl font-bold text-neutral-800 max-md:max-w-full">
+            <h1 className="text-4xl font-bold text-neutral-800 max-md:text-2xl max-md:max-w-full">
               {websiteItem.website_item_name}
             </h1>
-            <div className="mt-2 text-4xl text-zinc-500">
+            <div className="mt-2 text-4xl text-zinc-500 max-md:text-lg">
               {websiteItem.stock_uom}
             </div>
-            <div className="mt-1 text-4xl font-bold text-sky-900">
+            <div className="mt-1 text-4xl font-bold text-sky-900 max-md:text-2xl">
               QAR {websiteItem.price.website_item_price.toFixed(2)}
             </div>
-            <div className="flex gap-3.5 mt-2 text-2xl whitespace-nowrap leading-[52px] text-neutral-800">
-              <div className="flex shrink-0 my-auto bg-sky-500 rounded-full fill-sky-500 h-[15px] w-[15px]" />
+            <div className="flex gap-3.5 mt-2 text-2xl whitespace-nowrap leading-[52px] text-neutral-800 max-md:text-lg">
+              <div className="flex shrink-0 my-auto bg-sky-500 rounded-full fill-sky-500 h-[15px] w-[15px] max-md:h-4 max-md:w-4" />
               <div>{websiteItem.in_stock ? "Available" : "Out of Stock"}</div>
             </div>
 
-            {/* Main list rendering attribute title and sub-list */}
-            {websiteItem.website_item_attributes?.map((attribute, index) => (
-              <div key={index} className="mt-5">
-                <h2 className="text-2xl font-semibold leading-none text-neutral-500">
-                  {attribute.attribute_title}
+            {websiteItem.attribute_variants?.map((variant) => (
+              <div key={variant.attribute_id} className="mt-5">
+                <h2 className="text-2xl font-semibold leading-none text-neutral-500 max-md:text-lg">
+                  {variant.attribute_title}
                 </h2>
-                <div className="flex flex-wrap gap-3 self-stretch mt-6 text-lg text-black">
-                  {attribute.attribute_style === "Icon" ? (
-                    <CuttingOption
-                      image={websiteItem.website_item_image} // Placeholder for the icon
-                      label={attribute.attribute_value.value_title}
-                    />
-                  ) : (
-                    <div>{attribute.attribute_value.value_title}</div>
-                  )}
+                <div
+                  className={`flex gap-3 mt-6 text-lg text-black ${
+                    variant.attribute_style === "Icon"
+                      ? "flex-wrap whitespace-nowrap scrollbar-thin scrollbar-thumb-sky-500 scrollbar-track-gray-200 max-md:flex-wrap max-md:gap-2"
+                      : "flex-wrap max-md:gap-2"
+                  }`}
+                >
+                  {variant.attribute_style === "Icon"
+                    ? variant.attribute_value.map((value) => (
+                        <CuttingOption
+                          key={value.value_id}
+                          image={value.icon}
+                          label={value.value_title}
+                          isSelected={
+                            selectedAttributes[variant.attribute_id] ===
+                            value.value_id
+                          }
+                          onSelect={() =>
+                            handleAttributeSelect(
+                              variant.attribute_id,
+                              value.value_id
+                            )
+                          }
+                        />
+                      ))
+                    : variant.attribute_value.map((value) => (
+                        <button
+                          key={value.value_id}
+                          className={`px-4 py-2 border rounded ${
+                            selectedAttributes[variant.attribute_id] ===
+                            value.value_id
+                              ? "bg-sky-500 text-white"
+                              : "bg-white text-black border-zinc-400 hover:bg-gray-100"
+                          } text-sm max-md:px-2 max-md:py-1`}
+                          onClick={() =>
+                            handleAttributeSelect(
+                              variant.attribute_id,
+                              value.value_id
+                            )
+                          }
+                        >
+                          {value.value_title}
+                        </button>
+                      ))}
                 </div>
               </div>
             ))}
 
-            <div className="flex flex-wrap gap-10 self-stretch mt-9 w-full max-md:max-w-full">
-              <div className="grow shrink my-auto text-2xl font-semibold text-black w-[152px]">
+            {/* Pick up Location */}
+            <div className="flex flex-wrap gap-10 self-stretch mt-9 w-full max-md:flex-col max-md:gap-4">
+              <div className="grow shrink my-auto text-2xl font-semibold text-black w-[152px] max-md:w-full">
                 Pick up Location
               </div>
-              <div className="flex gap-10 text-xl">
+              <div className="flex gap-10 text-xl max-md:gap-4 max-md:flex-wrap max-md:w-full">
                 {locations.map((location, index) => (
                   <LocationButton
                     key={index}
                     name={location.name}
-                    isActive={location.isActive}
+                    isActive={selectedLocation === location.name}
+                    onClick={() => handleLocationSelect(location.name)}
                   />
                 ))}
               </div>
             </div>
 
+            {/* QID Section */}
             <section className="flex z-10 flex-col mt-10 mb-0 w-full max-md:mb-2.5 max-md:max-w-full">
               <div className="flex flex-col max-w-full w-full lg:w-[837px]">
-                <div className="flex items-center flex-wrap w-full justify-between">
-                  <h2 className="mr-24 text-2xl font-semibold leading-none text-black max-md:mr-2.5">
+                <div className="flex items-center flex-wrap w-full justify-between max-md:flex-col max-md:items-start">
+                  <h2 className="mr-24 text-2xl font-semibold leading-none text-black max-md:mr-0 max-md:mb-2 max-md:text-lg">
                     Qatari ID
                   </h2>
-                  <form className="flex gap-5 w-full max-w-[480px] mt-4 justify-between pl-8 rounded-sm border border-sky-700 border-solid shadow-[0px_3px_5px_rgba(0,0,0,0.051)] max-md:pl-5 max-md:max-w-full">
+                  <form
+                    className="flex gap-5 w-full max-w-[480px] mt-4 justify-between md:pl-8 rounded-sm md:border border-sky-700 md:border-solid shadow-[0px_3px_5px_rgba(0,0,0,0.051)]  max-md:max-w-full max-md:flex-col max-md:gap-4"
+                    onSubmit={handleQidValidate}
+                  >
                     <label htmlFor="qidInput" className="sr-only">
                       Type your QID here
                     </label>
                     <input
                       id="qidInput"
                       type="text"
-                      className="my-auto text-lg font-light text-zinc-500"
+                      className="w-full px-4 py-2 text-lg font-light text-zinc-500 bg-transparent max-md:border max-md:border-zinc-300 rounded-md focus:outline-none   max-md:w-full"
                       placeholder="Type your QID here"
+                      value={qid}
+                      onChange={handleQidChange}
+                      required
                     />
                     <button
                       type="submit"
-                      className="px-9 py-4 text-xl font-semibold text-sky-800 whitespace-nowrap bg-white rounded-none border-sky-700 border-solid shadow-sm border-[0.5px] max-md:px-5"
+                      className="w-auto px-9 py-4 text-xl font-semibold text-sky-800 whitespace-nowrap bg-white rounded-md border border-sky-700 border-solid shadow-sm hover:bg-sky-100 max-md:w-full max-md:px-5 max-md:text-base"
                     >
                       Validate
                     </button>
                   </form>
                 </div>
 
-                <div className="flex flex-wrap gap-5 justify-between mt-2 w-full max-md:max-w-full">
-                  <div className="self-end mt-14 text-2xl font-semibold text-black max-md:mt-10">
+                <div className="flex flex-wrap gap-5 justify-between mt-8 w-full max-md:flex-col max-md:gap-2 items-center">
+                  <div className="self-center max-md:self-start text-2xl font-semibold text-black max-md:mt-10 max-md:text-lg">
                     Upload QID copy
                   </div>
-                  <div className="flex gap-5 justify-between px-11 w-[480px] py-2.5 mt-9 max-md:mt-0 text-xl font-semibold text-sky-800 bg-white rounded border border-dashed shadow-sm border-neutral-300 max-md:px-5 max-md:max-w-full">
-                    <div className="my-auto">Browse</div>
+                  <div className="flex items-center gap-5 justify-between px-11 w-[480px] py-2.5  max-md:mt-0 text-xl font-semibold text-sky-800 bg-white rounded border border-dashed shadow-sm border-neutral-300 max-md:px-5 max-md:max-w-full">
+                    <label
+                      htmlFor="qidFile"
+                      className="flex-grow cursor-pointer  max-md:text-base"
+                    >
+                      Browse
+                    </label>
+                    <input
+                      id="qidFile"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
                     <img
                       loading="lazy"
                       src="https://cdn.builder.io/api/v1/image/assets/TEMP/6cec8ae65bb1456eab23329b90da823d9c1e52eb6bbb29d5bfdb1bb52708414d?placeholderIfAbsent=true&apiKey=9810db3822b54ab583e896edd833d595"
-                      alt=""
-                      className="object-contain shrink-0 aspect-[1.46] w-[54px]"
+                      alt="Upload Icon"
+                      className="object-contain shrink-0 aspect-[1.46] w-[54px] max-md:w-12 max-md:h-12"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Quantity and Add to Cart */}
               <div className="flex max-md:flex-col gap-7 self-end mt-7 w-full max-w-full">
-                <QuantitySelector />
-                <AddToCartButton price={websiteItem.price.website_item_price} />
+                <QuantitySelector
+                  quantity={quantity}
+                  min={websiteItem.min_qty}
+                  max={websiteItem.max_qty}
+                  onChange={setQuantity}
+                />
+                <AddToCartButton
+                  price={websiteItem.price.website_item_price}
+                  onClick={handleAddToCart}
+                />
               </div>
 
+              {/* Nutrition Facts */}
               <div className="mt-10">
                 <div className="text-black text-[35px] font-bold font-['Montserrat']">
                   Nutrition Facts
@@ -179,11 +374,11 @@ const ProductDetails = ({
         </section>
       </main>
       {websiteItem.short_description && (
-        <div>
-          <div className="text-black text-[35px] font-bold mt-20">
+        <div className="mt-10 px-5">
+          <div className="text-black text-[35px] font-bold mt-20 max-md:text-2xl">
             Description
           </div>
-          <div className="w-[1416.06px] h-[115.34px] text-[#707070] text-2xl font-normal font-['Montserrat'] leading-[30px]">
+          <div className="w-full h-auto text-[#707070] text-2xl font-normal font-['Montserrat'] leading-[30px] max-md:w-full max-md:text-base">
             {websiteItem.short_description}
           </div>
         </div>

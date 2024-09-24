@@ -2,7 +2,7 @@ import React from "react";
 
 const ContactButton: React.FC = () => {
   return (
-    <div className="flex flex-col sm:flex-row gap-5 justify-between self-start px-4 py-3 mt-2.5 ml-0 font-medium text-center max-md:items-center bg-sky-900 rounded w-full sm:w-auto">
+    <div className="flex flex-col sm:flex-row gap-5 justify-between self-start px-4 py-3 mt-2.5 ml-0 font-medium text-center max-md:items-center bg-[#003B82] rounded w-full sm:w-auto">
       <div className="text-sm leading-4 text-white">
         <span className="text-white">We&apos;re alwa</span>ys <br /> here to
         help!

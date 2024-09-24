@@ -49,6 +49,8 @@ interface BannerBlockProps {
 const BannerBlock: React.FC<BannerBlockProps> = ({ block }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  console.log(block);
+
   useEffect(() => {
     const hasSelectedLocation = localStorage.getItem("hasOpenedDialog");
 
@@ -67,7 +69,7 @@ const BannerBlock: React.FC<BannerBlockProps> = ({ block }) => {
       return (
         <div className="w-full max-h-[400px]">
           <a
-            href={banner.banner_link}
+            href={`/categories?category=${banner.banner_link}`}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -101,7 +103,7 @@ const BannerBlock: React.FC<BannerBlockProps> = ({ block }) => {
           {block.data.map((banner, index) => (
             <div key={index} className="w-full max-h-[400px] relative">
               <a
-                href={banner.banner_link}
+                href={`/categories?category=${banner.banner_link}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -161,7 +163,7 @@ const BannerBlock: React.FC<BannerBlockProps> = ({ block }) => {
                   {block.data.map((banner, index) => (
                     <a
                       key={index}
-                      href={banner.banner_link}
+                      href={`/categories?category=${banner.banner_link}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

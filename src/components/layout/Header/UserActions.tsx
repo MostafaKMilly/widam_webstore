@@ -1,3 +1,4 @@
+// components/UserActions.tsx
 "use client";
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, User } from "lucide-react";
@@ -6,15 +7,26 @@ import useCartStore from "@/lib/store/cartStore";
 
 const UserActions: React.FC = () => {
   const cartItemCount = useCartStore((state) => state.getTotalCount());
+  const totalPrice = useCartStore((state) => state.getTotalPrice()); // Get total price
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setLoaded(true);
   }, []);
 
+  // Format the total price to QAR currency
+  const formattedTotalPrice = new Intl.NumberFormat("en-QA", {
+    style: "currency",
+    currency: "QAR",
+    minimumFractionDigits: 2,
+  }).format(totalPrice);
+
   return (
-    <div className="flex gap-2.5 items-center mt-1.5 text-sm font-semibold text-white">
-      <div className="grow my-auto">QAR 115.00</div>
+    <div className="flex gap-2.5 items-center mt-1.5 ml-1 text-sm font-semibold text-white">
+      <div className="my-auto flex">
+        {loaded && <p className="ml-auto">{formattedTotalPrice}</p>}
+        {/* Display total price */}
+      </div>
 
       <div className="relative">
         <Link
@@ -31,7 +43,7 @@ const UserActions: React.FC = () => {
       </div>
 
       <Link
-        href="/profile"
+        href="/settings"
         className="flex items-center justify-center bg-white rounded-full h-[38px] w-[38px]"
       >
         <User className="text-[#03ADEB]" size={24} />

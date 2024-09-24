@@ -9,7 +9,7 @@ interface QuickLinksProps {
 const QuickLinks: React.FC<QuickLinksProps> = ({ title, links }) => {
   return (
     <div className="flex flex-col items-center mt-12 max-w-full">
-      <div className="self-stretch h-px bg-[#03ADEB] w-full" />
+      <div className="self-stretch h-px bg-[#05B] w-[400px]" />
       <h2 className="mt-7 text-2xl font-bold leading-10 text-center text-black">
         {title}
       </h2>

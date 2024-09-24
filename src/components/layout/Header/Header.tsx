@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const Header: React.FC = () => {
   return (
-    <header className="flex justify-between items-center px-4 py-6 bg-primary md:px-20">
+    <header className="flex z-50 justify-between items-center px-4 py-6 bg-primary md:px-20">
       <div className="max-w-[1680px] w-full flex justify-between items-center mx-auto">
         <div className="flex items-center gap-5 ">
           <Link href={"/"}>
