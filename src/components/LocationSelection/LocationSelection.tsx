@@ -1,27 +1,59 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import LocationInput from "./LocationInput";
 import ActionButtons from "./ActionButtons";
 import { validateCord } from "@/lib/queries/validateCord";
 import { updateGefence } from "@/lib/actions/updateGefence";
+import { useStore } from "zustand";
+import { getUser } from "@/lib/api/profile";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface LocationSelectionProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectLocation?: (latitude: string, longitude: string) => void;
+  initialLocation?: {
+    latitude: string;
+    longitude: string;
+  };
 }
 
 const LocationSelection: React.FC<LocationSelectionProps> = ({
   isOpen,
   onClose,
+  onSelectLocation,
+  initialLocation,
 }) => {
   const [location, setLocation] = useState("");
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+
+  console.log(map);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
     null
   );
+  const [selectedGeofenceId, setSelectedGeofenceId] = useState<string | null>(
+    null
+  );
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getUser(),
+  });
+
+  const updateGefenceMutation = useMutation({
+    mutationFn: (geofenceId: string) => updateGefence(geofenceId),
+    onSuccess: () => {
+      console.log("Geofence updated successfully");
+      onClose();
+    },
+    onError: (error) => {
+      console.error("Error updating geofence:", error);
+      alert("Failed to update geofence. Please try again.");
+    },
+  });
 
   const initMap = (latitude: number, longitude: number) => {
     if (mapRef.current) {
@@ -57,54 +89,81 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
             });
           }
 
-          // Validate the new location coordinates
-          validateCord(clickedLocation.lat(), clickedLocation.lng()).then(
-            (result) => {
+          validateCord(clickedLocation.lat(), clickedLocation.lng())
+            .then((result) => {
               if (result?.data) {
-                updateGefence(
+                const geofenceId =
                   result.data.matchedGeofence?.geofence_id ||
-                    result.data.default_address.geofence.geofence_id
-                );
+                  result.data.default_address.geofence.geofence_id;
+                setSelectedGeofenceId(geofenceId);
               }
-            }
-          );
+            })
+            .catch((error) => {
+              console.error("Error validating coordinates:", error);
+            });
         }
       });
     }
   };
 
-  useEffect(() => {
-    // Fetch and store the geofence_id for the default location
-    validateCord().then((result) => {
-      if (result?.data?.default_address?.geofence) {
-        updateGefence(result.data.default_address.geofence.geofence_id);
+  const loadMap = async () => {
+    if (!mapRef.current) {
+      console.error("Map container ref is not available");
+      return;
+    }
 
-        // Initialize the map with the default coordinates
+    if (!window.google) {
+      console.error("Google Maps script not loaded");
+      return;
+    }
+
+    try {
+      const result = await validateCord();
+      if (result?.data?.default_address?.geofence) {
+        const geofenceId = result.data.default_address.geofence.geofence_id;
+        setSelectedGeofenceId(geofenceId);
+
         const defaultLatitude = parseFloat(
-          result.data.default_address.latitude
+          result.data.default_address.latitude ||
+            initialLocation?.latitude ||
+            "0"
         );
         const defaultLongitude = parseFloat(
-          result.data.default_address.longitude
+          result.data.default_address.longitude ||
+            initialLocation?.longitude ||
+            "0"
         );
-        initMap(defaultLatitude, defaultLongitude);
-      }
-    });
 
-    if (window.google && !map) {
-      // If Google Maps is already loaded and the map is not yet initialized
-      validateCord().then((result) => {
-        if (result?.data?.default_address?.geofence) {
-          const defaultLatitude = parseFloat(
-            result.data.default_address.latitude
-          );
-          const defaultLongitude = parseFloat(
-            result.data.default_address.longitude
-          );
+        if (!map) {
           initMap(defaultLatitude, defaultLongitude);
+        } else {
+          map.setCenter({ lat: defaultLatitude, lng: defaultLongitude });
+          if (markerRef.current) {
+            markerRef.current.setPosition({
+              lat: defaultLatitude,
+              lng: defaultLongitude,
+            });
+          } else {
+            markerRef.current = new google.maps.Marker({
+              position: { lat: defaultLatitude, lng: defaultLongitude },
+              map: map,
+            });
+          }
         }
-      });
+      } else {
+        console.warn("No geofence data available");
+      }
+    } catch (error) {
+      console.error("Error loading map:", error);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    if (!isOpen && map) {
+      google.maps.event.clearInstanceListeners(map);
+      setMap(null);
+    }
+  }, [isOpen]);
 
   const handleLocateMe = () => {
     if (navigator.geolocation) {
@@ -127,15 +186,18 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
               });
             }
 
-            // Validate the located coordinates
-            validateCord(pos.lat, pos.lng).then((result) => {
-              if (result?.data) {
-                updateGefence(
-                  result.data.matchedGeofence?.geofence_id ||
-                    result.data.default_address.geofence.geofence_id
-                );
-              }
-            });
+            validateCord(pos.lat, pos.lng)
+              .then((result) => {
+                if (result?.data) {
+                  const geofenceId =
+                    result.data.matchedGeofence?.geofence_id ||
+                    result.data.default_address.geofence.geofence_id;
+                  setSelectedGeofenceId(geofenceId);
+                }
+              })
+              .catch((error) => {
+                console.error("Error validating coordinates:", error);
+              });
           } else {
             console.error("Map is not initialized yet.");
           }
@@ -181,17 +243,18 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
               });
             }
 
-            // Validate the new location coordinates
-            validateCord(newLocation.lat(), newLocation.lng()).then(
-              (result) => {
+            validateCord(newLocation.lat(), newLocation.lng())
+              .then((result) => {
                 if (result?.data) {
-                  updateGefence(
+                  const geofenceId =
                     result.data.matchedGeofence?.geofence_id ||
-                      result.data.default_address.geofence.geofence_id
-                  );
+                    result.data.default_address.geofence.geofence_id;
+                  setSelectedGeofenceId(geofenceId);
                 }
-              }
-            );
+              })
+              .catch((error) => {
+                console.error("Error validating coordinates:", error);
+              });
           } else {
             console.error("Error fetching place details:", status);
           }
@@ -200,12 +263,23 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
     }
   };
 
-  const handleConfirmLocation = () => {
+  const { dictionary } = useDictionary();
+
+  const handleConfirmLocation = async () => {
     if (markerRef.current) {
       const confirmedLocation = markerRef.current.getPosition();
       console.log("Confirmed location:", confirmedLocation?.toString());
-      localStorage.setItem("hasOpenedDialog", "true");
-      onClose();
+
+      if (confirmedLocation) {
+        const latitude = confirmedLocation.lat();
+        const longitude = confirmedLocation.lng();
+
+        onSelectLocation?.(latitude.toString(), longitude.toString());
+
+        if (selectedGeofenceId && !user?.data) {
+          await updateGefenceMutation.mutateAsync(selectedGeofenceId);
+        }
+      }
     } else {
       alert("Please select a location before confirming.");
     }
@@ -242,6 +316,9 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
               leave="ease-in duration-200"
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
+              afterEnter={() => {
+                loadMap();
+              }}
             >
               <Dialog.Panel className="w-[1358px] h-[807px] bg-white rounded-xl overflow-hidden relative">
                 <div
@@ -252,7 +329,7 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
 
                 <div className="bg-white py-4 flex flex-col items-center justify-center absolute top-0 w-full">
                   <h1 className="self-center text-xl md:text-3xl font-bold text-zinc-950">
-                    Choose your location
+                    {dictionary.choose_your_location}
                   </h1>
                 </div>
                 <div className="p-6 flex flex-col h-full">

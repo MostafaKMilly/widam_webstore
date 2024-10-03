@@ -7,12 +7,18 @@ import AddToCartButton from "./AddToCartButton";
 import { WebsiteItem } from "@/lib/queries/getWebsiteItem";
 import useCartStore from "@/lib/store/cartStore";
 import toast from "react-hot-toast";
+import { useDictionary } from "@/lib/hooks/useDictionary";
+import {
+  NutritionFacts,
+  nutritionFactsMapping,
+} from "@/lib/helpers/nutrationFacts";
 
 const ProductDetails = ({
   websiteItem,
 }: {
   websiteItem: WebsiteItem | undefined;
 }) => {
+  const { dictionary } = useDictionary(); // Access translations
   console.log(websiteItem);
 
   // Static locations for now
@@ -57,9 +63,9 @@ const ProductDetails = ({
     console.log("Validating QID:", qid);
     // Example: Simple validation (length check)
     if (qid.length === 11) {
-      toast.success("QID is valid.");
+      toast.success(dictionary.qidValid || "QID is valid.");
     } else {
-      toast.error("QID must be 11 characters.");
+      toast.error(dictionary.qidInvalid || "QID must be 11 characters.");
     }
   };
 
@@ -77,23 +83,28 @@ const ProductDetails = ({
     const requiredAttributes = websiteItem?.attribute_variants || [];
     for (let attr of requiredAttributes) {
       if (!selectedAttributes[attr.attribute_id]) {
-        toast.error(`Please select a value for ${attr.attribute_title}`);
+        toast.error(
+          `${dictionary.pleaseSelect} ${attr.attribute_title}` ||
+            `Please select a value for ${attr.attribute_title}`
+        );
         return;
       }
     }
 
     if (!selectedLocation) {
-      toast.error("Please select a pickup location.");
+      toast.error(
+        dictionary.selectPickupLocation || "Please select a pickup location."
+      );
       return;
     }
 
     if (qid.trim() === "") {
-      toast.error("Please enter your QID.");
+      toast.error(dictionary.enterQid || "Please enter your QID.");
       return;
     }
 
     if (!qidFile) {
-      toast.error("Please upload a copy of your QID.");
+      toast.error(dictionary.uploadQid || "Please upload a copy of your QID.");
       return;
     }
 
@@ -129,12 +140,20 @@ const ProductDetails = ({
     };
 
     addItem(itemToAdd);
-    toast.success("Item added to cart!");
+    toast.success(dictionary.itemAddedToCart || "Item added to cart!");
   };
 
   if (!websiteItem) {
-    return <div className="text-center py-20">Loading...</div>;
+    return (
+      <div className="text-center py-20">
+        {dictionary.loading || "Loading..."}
+      </div>
+    );
   }
+
+  // Fetch nutrition facts based on stock_uom
+  const nutritionFacts: NutritionFacts | undefined =
+    nutritionFactsMapping[websiteItem.stock_uom];
 
   return (
     <div className="px-20 pt-16 w-full shadow-sm bg-slate-50 max-md:px-5 max-md:pb-5 pb-10 max-md:max-w-full">
@@ -163,9 +182,11 @@ const ProductDetails = ({
               </div>
 
               {/* Popularity Badge */}
-              <div className="relative z-10 px-12 py-5 mt-0 mb-0 max-md:px-5 max-md:mb-2.5">
-                {websiteItem.popularity > 0 ? "Best Seller" : ""}
-              </div>
+              {websiteItem.popularity > 0 && (
+                <div className="relative z-10 px-12 py-5 mt-0 mb-0 max-md:px-5 max-md:mb-2.5">
+                  {dictionary.bestSeller || "Best Seller"}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -195,7 +216,11 @@ const ProductDetails = ({
             </div>
             <div className="flex gap-3.5 mt-2 text-2xl whitespace-nowrap leading-[52px] text-neutral-800 max-md:text-lg">
               <div className="flex shrink-0 my-auto bg-sky-500 rounded-full fill-sky-500 h-[15px] w-[15px] max-md:h-4 max-md:w-4" />
-              <div>{websiteItem.in_stock ? "Available" : "Out of Stock"}</div>
+              <div>
+                {websiteItem.in_stock
+                  ? dictionary.available || "Available"
+                  : dictionary.outOfStock || "Out of Stock"}
+              </div>
             </div>
 
             {websiteItem.attribute_variants?.map((variant) => (
@@ -254,7 +279,7 @@ const ProductDetails = ({
             {/* Pick up Location */}
             <div className="flex flex-wrap gap-10 self-stretch mt-9 w-full max-md:flex-col max-md:gap-4">
               <div className="grow shrink my-auto text-2xl font-semibold text-black w-[152px] max-md:w-full">
-                Pick up Location
+                {dictionary["Pick up Location"] || "Pick up Location"}
               </div>
               <div className="flex gap-10 text-xl max-md:gap-4 max-md:flex-wrap max-md:w-full">
                 {locations.map((location, index) => (
@@ -273,20 +298,22 @@ const ProductDetails = ({
               <div className="flex flex-col max-w-full w-full lg:w-[837px]">
                 <div className="flex items-center flex-wrap w-full justify-between max-md:flex-col max-md:items-start">
                   <h2 className="mr-24 text-2xl font-semibold leading-none text-black max-md:mr-0 max-md:mb-2 max-md:text-lg">
-                    Qatari ID
+                    {dictionary["Qatari ID"] || "Qatari ID"}
                   </h2>
                   <form
                     className="flex gap-5 w-full max-w-[480px] mt-4 justify-between md:pl-8 rounded-sm md:border border-sky-700 md:border-solid shadow-[0px_3px_5px_rgba(0,0,0,0.051)]  max-md:max-w-full max-md:flex-col max-md:gap-4"
                     onSubmit={handleQidValidate}
                   >
                     <label htmlFor="qidInput" className="sr-only">
-                      Type your QID here
+                      {dictionary.typeQidHere || "Type your QID here"}
                     </label>
                     <input
                       id="qidInput"
                       type="text"
                       className="w-full px-4 py-2 text-lg font-light text-zinc-500 bg-transparent max-md:border max-md:border-zinc-300 rounded-md focus:outline-none   max-md:w-full"
-                      placeholder="Type your QID here"
+                      placeholder={
+                        dictionary.typeQidHere || "Type your QID here"
+                      }
                       value={qid}
                       onChange={handleQidChange}
                       required
@@ -295,21 +322,21 @@ const ProductDetails = ({
                       type="submit"
                       className="w-auto px-9 py-4 text-xl font-semibold text-sky-800 whitespace-nowrap bg-white rounded-md border border-sky-700 border-solid shadow-sm hover:bg-sky-100 max-md:w-full max-md:px-5 max-md:text-base"
                     >
-                      Validate
+                      {dictionary.validate || "Validate"}
                     </button>
                   </form>
                 </div>
 
                 <div className="flex flex-wrap gap-5 justify-between mt-8 w-full max-md:flex-col max-md:gap-2 items-center">
                   <div className="self-center max-md:self-start text-2xl font-semibold text-black max-md:mt-10 max-md:text-lg">
-                    Upload QID copy
+                    {dictionary["Upload QID copy"] || "Upload QID copy"}
                   </div>
                   <div className="flex items-center gap-5 justify-between px-11 w-[480px] py-2.5  max-md:mt-0 text-xl font-semibold text-sky-800 bg-white rounded border border-dashed shadow-sm border-neutral-300 max-md:px-5 max-md:max-w-full">
                     <label
                       htmlFor="qidFile"
                       className="flex-grow cursor-pointer  max-md:text-base"
                     >
-                      Browse
+                      {dictionary.browse || "Browse"}
                     </label>
                     <input
                       id="qidFile"
@@ -321,7 +348,7 @@ const ProductDetails = ({
                     <img
                       loading="lazy"
                       src="https://cdn.builder.io/api/v1/image/assets/TEMP/6cec8ae65bb1456eab23329b90da823d9c1e52eb6bbb29d5bfdb1bb52708414d?placeholderIfAbsent=true&apiKey=9810db3822b54ab583e896edd833d595"
-                      alt="Upload Icon"
+                      alt={dictionary.uploadIcon || "Upload Icon"}
                       className="object-contain shrink-0 aspect-[1.46] w-[54px] max-md:w-12 max-md:h-12"
                     />
                   </div>
@@ -343,32 +370,76 @@ const ProductDetails = ({
               </div>
 
               {/* Nutrition Facts */}
-              <div className="mt-10">
-                <div className="text-black text-[35px] font-bold font-['Montserrat']">
-                  Nutrition Facts
+              {nutritionFacts && (
+                <div className="mt-10">
+                  <div className="text-black text-[35px] font-bold font-['Montserrat']">
+                    {dictionary["Nutrition Facts"] || "Nutrition Facts"}
+                  </div>
+                  <div className="w-[602px] h-auto text-[#707070] text-2xl font-['Montserrat'] leading-[35px]">
+                    <div>
+                      <span className="font-semibold">
+                        {nutritionFacts.kcal}{" "}
+                      </span>
+                      <span className="font-semibold lowercase">
+                        {dictionary.nutritionKcal || "KCAL"}
+                      </span>
+                      <span className="font-normal">
+                        {" "}
+                        {dictionary.per100Energy || "Per 100 Energy in kcal"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">
+                        {nutritionFacts.protein}{" "}
+                      </span>
+                      <span className="font-semibold lowercase">
+                        {dictionary.nutritionProtein || "g"}
+                      </span>
+                      <span className="font-normal">
+                        {" "}
+                        {dictionary.per100Protein || "Per 100 Protein"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">
+                        {nutritionFacts.carbohydrates}{" "}
+                      </span>
+                      <span className="font-semibold lowercase">
+                        {dictionary.nutritionCarbohydrates || "g"}
+                      </span>
+                      <span className="font-normal">
+                        {" "}
+                        {dictionary.per100Carbohydrates ||
+                          "Per 100 Carbohydrates"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">
+                        {nutritionFacts.sugar}{" "}
+                      </span>
+                      <span className="font-semibold lowercase">
+                        {dictionary.nutritionSugar || "g"}
+                      </span>
+                      <span className="font-normal">
+                        {" "}
+                        {dictionary.per100Sugar || "Per 100 Sugar"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">
+                        {nutritionFacts.fat}{" "}
+                      </span>
+                      <span className="font-semibold lowercase">
+                        {dictionary.nutritionFat || "g"}
+                      </span>
+                      <span className="font-normal">
+                        {" "}
+                        {dictionary.per100Fat || "Per 100 Fat"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="w-[602px] h-[190px] text-[#707070] text-2xl font-['Montserrat'] leading-[35px]">
-                  <span className="font-semibold">750 </span>
-                  <span className="font-semibold lowercase">KCAL</span>
-                  <span className="font-normal"> Per 100 Energy in kcal</span>
-                  <br />
-                  <span className="font-semibold">36 </span>
-                  <span className="font-semibold lowercase">G</span>
-                  <span className="font-normal"> Per 100 Protein</span>
-                  <br />
-                  <span className="font-semibold">00 </span>
-                  <span className="font-semibold lowercase">G</span>
-                  <span className="font-normal"> Per 100 Carbohydrates</span>
-                  <br />
-                  <span className="font-semibold">00 </span>
-                  <span className="font-semibold lowercase">G</span>
-                  <span className="font-normal"> Per 100 Sugar</span>
-                  <br />
-                  <span className="font-semibold">00 </span>
-                  <span className="font-semibold lowercase">G</span>
-                  <span className="font-normal"> Per 100 Fat</span>
-                </div>
-              </div>
+              )}
             </section>
           </div>
         </section>
@@ -376,7 +447,7 @@ const ProductDetails = ({
       {websiteItem.short_description && (
         <div className="mt-10 px-5">
           <div className="text-black text-[35px] font-bold mt-20 max-md:text-2xl">
-            Description
+            {dictionary.Description || "Description"}
           </div>
           <div className="w-full h-auto text-[#707070] text-2xl font-normal font-['Montserrat'] leading-[30px] max-md:w-full max-md:text-base">
             {websiteItem.short_description}

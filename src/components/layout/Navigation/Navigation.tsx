@@ -3,56 +3,58 @@
 import React, { useState, useEffect } from "react";
 import CategoryList from "./CategoryList";
 import useScrollDirection from "@/lib/hooks/useScrollDirection";
-
-const categories = [
-  {
-    item_group_id: "IG001",
-    item_group_name: "Beef",
-    item_group_image: "https://widam.akwad.qa/files/Cow604f7e.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG011",
-    item_group_name: "Chicken",
-    item_group_image: "https://widam.akwad.qa/files/chicken%2033.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG015",
-    item_group_name: "Dairy",
-    item_group_image: "https://widam.akwad.qa/files/OK_Dairy.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG016",
-    item_group_name: "Frozen Food",
-    item_group_image: "https://widam.akwad.qa/files/Frozen%20Food4af613.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG017",
-    item_group_name: "Fruit & Vegetable",
-    item_group_image:
-      "https://widam.akwad.qa/files/OK_Fruits%20and%20Vegetables%201.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG018",
-    item_group_name: "Lamb",
-    item_group_image: "https://widam.akwad.qa/files/OK_Lamb.png",
-    is_group: 1,
-  },
-  {
-    item_group_id: "IG020",
-    item_group_name: "Offal",
-    item_group_image: "https://widam.akwad.qa/files/OK_Offal%20May%20be.png",
-    is_group: 1,
-  },
-];
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 const Navigation: React.FC = () => {
+  const { dictionary } = useDictionary();
   const scrollDir = useScrollDirection();
   const [visible, setVisible] = useState(true);
+
+  const categories = [
+    {
+      item_group_id: "IG001",
+      item_group_name: dictionary.Beef, // Translated from dict
+      item_group_image: "https://widam.akwad.qa/files/Cow604f7e.png",
+      is_group: 1,
+    },
+    {
+      item_group_id: "IG011",
+      item_group_name: dictionary.Chicken, // Translated from dict
+      item_group_image: "https://widam.akwad.qa/files/chicken%2033.png",
+      is_group: 1,
+    },
+    {
+      item_group_id: "IG015",
+      item_group_name: dictionary.Dairy, // Translated from dict
+      item_group_image: "https://widam.akwad.qa/files/OK_Dairy.png",
+      is_group: 1,
+    },
+    {
+      item_group_id: "IG016",
+      item_group_name: dictionary.Frozen, // Translated from dict
+      item_group_image: "https://widam.akwad.qa/files/Frozen%20Food4af613.png",
+      is_group: 1,
+    },
+    {
+      item_group_id: "IG017",
+      item_group_name: dictionary.Fruit, // Translated from dict (you can add 'Fruit & Vegetable' if required)
+      item_group_image:
+        "https://widam.akwad.qa/files/OK_Fruits%20and%20Vegetables%201.png",
+      is_group: 1,
+    },
+    {
+      item_group_id: "IG018",
+      item_group_name: dictionary.Lamb, // Translated from dict
+      item_group_image: "https://widam.akwad.qa/files/OK_Lamb.png",
+      is_group: 1,
+    },
+    {
+      item_group_id: "IG020",
+      item_group_name: dictionary.Offal, // Translated from dict
+      item_group_image: "https://widam.akwad.qa/files/OK_Offal%20May%20be.png",
+      is_group: 1,
+    },
+  ];
 
   useEffect(() => {
     if (scrollDir === "down") {

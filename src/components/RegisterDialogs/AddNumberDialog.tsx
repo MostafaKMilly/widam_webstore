@@ -1,4 +1,4 @@
-// AddNumberDialog.tsx
+// components/AddNumberDialog.tsx
 import React, { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import PhoneInput from "./PhoneInput";
@@ -52,7 +52,6 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
   };
 
   const handleVerifySuccess = () => {
-    // Handle successful verification (e.g., navigate to dashboard, close all dialogs, etc.)
     onClose();
   };
 
@@ -123,7 +122,7 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
         isOpen={isVerifyDialogOpen}
         onClose={() => setIsVerifyDialogOpen(false)}
         phoneNumber={phoneNumber}
-        onVerified={handleVerifySuccess}
+        onLoginSuccess={handleVerifySuccess}
       />
     </>
   );

@@ -1,4 +1,5 @@
 "use server";
+import { cookies } from "next/headers";
 import getUtils from "./getUtils";
 
 export const getHomeLayoutId = async () => {
@@ -73,10 +74,15 @@ interface LayoutResponse {
 
 async function getLayout(layoutId: string) {
   const url = `${process.env.API_BASE_URL}/api/method/widam_delivery.layout.layouts?layout_id=${layoutId}`;
+  const cookiesStore = cookies();
+  const langauge = cookiesStore.get("language")?.value;
 
   const requestOptions: RequestInit = {
     method: "GET",
     redirect: "follow",
+    headers: {
+      "Accept-Language": langauge || "en",
+    },
   };
 
   try {

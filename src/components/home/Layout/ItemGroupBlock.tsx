@@ -1,7 +1,9 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 import { LayoutGrid } from "lucide-react";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface ItemGroupBlockProps {
   block: {
@@ -25,9 +27,11 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
   const isHorizontalScroll = block.view_type === "Horizontal Scroll";
   const isCircle = block.view_type === "Circle";
   const isSquare = block.view_type === "Square";
-
+  const { dictionary } = useDictionary();
+  const translatedTitle =
+    block.title === "Meat Court" ? dictionary.meat_court : block.title;
   const gridClasses = isHorizontalScroll
-    ? "flex overflow-x-auto space-x-4"
+    ? "flex overflow-x-auto gap-6"
     : "flex flex-wrap justify-start gap-6";
 
   const itemContainerClasses = isCircle
@@ -53,14 +57,16 @@ const ItemGroupBlock: React.FC<ItemGroupBlockProps> = ({ block }) => {
     >
       {block.show_title === 1 && (
         <h2 className="text-xl font-semibold mb-6 flex items-center">
-          {block.title}
+          {translatedTitle}
         </h2>
       )}
       <div className={gridClasses}>
         {block.data.slice(0, maxItems).map((item) => (
           <Link
             key={item.item_group_id}
-            href={`/categories?category=${item.item_group_id}?${item.parameters || ""}`}
+            href={`/categories?category=${item.item_group_id}?${
+              item.parameters || ""
+            }`}
             className={`flex flex-col items-center gap-1 justify-center ${itemContainerClasses}`}
             style={{
               ...(isCircle ? { borderRadius: "50%" } : {}),

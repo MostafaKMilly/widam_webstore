@@ -1,6 +1,6 @@
 "use server";
 
-import { getGefenceId } from "../helpers/getGeofenceId";
+import { getGeofenceId } from "../helpers/getGeofenceId";
 
 interface UtilitiesResponse {
   status_code: number;
@@ -10,7 +10,7 @@ interface UtilitiesResponse {
 }
 
 async function getUtils() {
-  const geofence_id = await getGefenceId();
+  const geofence_id = await getGeofenceId();
   const url = `${process.env.API_BASE_URL}/api/method/widam_delivery.utility.utilities?geofence_id=${geofence_id}`;
 
   const requestOptions: RequestInit = {

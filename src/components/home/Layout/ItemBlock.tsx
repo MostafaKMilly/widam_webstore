@@ -9,6 +9,7 @@ import useCartStore from "@/lib/store/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
 import AddNumberDialog from "@/components/RegisterDialogs/AddNumberDialog"; // Import the dialog
 import useUserStore from "@/lib/store/userStore";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface ItemBlockProps {
   block: {
@@ -59,8 +60,12 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
   const addItem = useCartStore((state) => state.addItem);
   const decrementItem = useCartStore((state) => state.decrementItem);
   const user = useUserStore((state) => state.user);
+  const { dictionary } = useDictionary();
+  const translatedTitle =
+    block.title.replace("STATIC", "") === "Recommended For you "
+      ? dictionary.recommended_for_you
+      : block.title.replace("STATIC", "");
 
-  // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleIncrement = (item: any) => {
@@ -100,7 +105,7 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
     >
       {block.show_title === 1 && (
         <h2 className="text-[#004990] md:text-3xl text-lg font-semibold mb-6 flex items-center">
-          {block.title.replace("STATIC", "")}
+          {translatedTitle}
         </h2>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -196,7 +201,7 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="flex items-center justify-between w-[170px] min-w-[180px] mt-1 space-x-6 bg-[#f6f6f6] rounded-[48px] absolute bottom-3 right-3"
+                        className="flex items-center justify-between w-[170px] min-w-[180px] mt-1  bg-[#f6f6f6] rounded-[48px] absolute bottom-3 ltr:right-3 rtl:left-3"
                       >
                         <button
                           onClick={(e) => {
@@ -230,7 +235,7 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
                           e.preventDefault();
                           handleIncrement(item);
                         }}
-                        className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 right-3"
+                        className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 ltr:right-3 rtl:left-3"
                       >
                         <PlusIcon className="text-white w-8 h-8 my-auto mx-auto" />
                       </motion.button>
@@ -239,7 +244,7 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
                 )}
                 {item.website_item_type === "V" && (
                   <button
-                    className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 right-3"
+                    className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 ltr:right-3 rtl:left-3"
                     onClick={(e) => {
                       if (!user) {
                         e.stopPropagation();

@@ -1,6 +1,7 @@
 "use server";
 
-import { getGefenceId } from "../helpers/getGeofenceId";
+import { cookies } from "next/headers";
+import { getGeofenceId } from "../helpers/getGeofenceId";
 
 interface GetItemGroupsParams {
   item_group_id?: string;
@@ -98,9 +99,15 @@ async function getItemGroups(
     process.env.API_BASE_URL
   }/api/method/widam_delivery.item_group.item_groups?${queryParams.toString()}`;
 
+  const cookiesStore = cookies();
+  const langauge = cookiesStore.get("langauge")?.value;
+
   const requestOptions: RequestInit = {
     method: "GET",
     redirect: "follow",
+    headers: {
+      "Accept-Language": langauge || "en",
+    },
   };
 
   try {

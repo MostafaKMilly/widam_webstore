@@ -54,7 +54,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
         nationality: "Qatar",
       });
 
-      if (response && response.status_code === 201) {
+      if (response && response.status_code === 201 && response.error === 0) {
         console.log("User registered successfully:", response.data);
         onClose();
         setUser(response.data);

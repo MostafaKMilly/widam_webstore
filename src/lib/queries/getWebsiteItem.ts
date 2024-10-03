@@ -1,5 +1,7 @@
 "use server";
 
+import { cookies } from "next/headers";
+
 interface WebsiteItemResponse {
   status_code: number;
   error: number;
@@ -9,10 +11,15 @@ interface WebsiteItemResponse {
 
 async function getWebsiteItem(website_item_id: string) {
   const url = `${process.env.API_BASE_URL}/api/method/widam_delivery.website_item.website_items?website_item_id=${website_item_id}&get_attribute_variants=1`;
+  const cookiesStore = cookies();
+  const langauge = cookiesStore.get("langauge")?.value;
 
   const requestOptions: RequestInit = {
     method: "GET",
     redirect: "follow",
+    headers: {
+      "Accept-Language": langauge || "en",
+    },
   };
 
   try {

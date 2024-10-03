@@ -26,7 +26,22 @@ interface RegisterResponse {
   status_code: number;
   error: number;
   message: string;
-  data: User;
+  data: {
+    token: string;
+    user_id: string;
+    user_name: string;
+    email: string;
+    mobile_no: string;
+    profile_details: {
+      first_name: string;
+      last_name: string;
+      customer_details: {
+        customer_name: string;
+        salutation: string;
+        nationality: string;
+      };
+    };
+  };
   _server_messages: string;
 }
 
@@ -135,7 +150,10 @@ async function register(
   try {
     const response = await fetch(url, requestOptions);
     const result: RegisterResponse = await response.json();
-    cookiesStore.set("token", result.data.token);
+    console.log(result);
+    if (result.data.token) {
+      cookiesStore.set("token", result.data.token);
+    }
     return result;
   } catch (error) {
     console.error("Error registering user:", error);

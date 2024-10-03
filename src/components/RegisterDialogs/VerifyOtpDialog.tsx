@@ -1,25 +1,27 @@
-// VerifyOtpDialog.tsx
+// components/VerifyOtpDialog.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog } from "@headlessui/react";
 import { XIcon } from "lucide-react";
 import { sendOtp, verifyOtp } from "@/lib/queries/authApi";
-import RegisterDialog from "./RegisterDialog"; // Import the RegisterDialog component
+import RegisterDialog from "./RegisterDialog";
+import useUserStore from "@/lib/store/userStore";
+import { getUser } from "@/lib/api/profile";
 
 interface VerifyOtpDialogProps {
   isOpen: boolean;
   onClose: () => void;
   phoneNumber: string;
-  onVerified: () => void;
+  onLoginSuccess: () => void;
 }
 
 const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
   isOpen,
   onClose,
   phoneNumber,
-  onVerified,
+  onLoginSuccess,
 }) => {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(36); // 36 seconds
+  const [timer, setTimer] = useState(36);
   const [attemptsLeft, setAttemptsLeft] = useState(4);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -27,6 +29,7 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const setUser = useUserStore((state) => state.setUser);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -45,7 +48,7 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
 
   const handleChange = (element: HTMLInputElement, index: number) => {
     const value = element.value;
-    if (!/^[0-9]?$/.test(value)) return; // Only allow single digits
+    if (!/^[0-9]?$/.test(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -88,15 +91,39 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
       if (response && response.status_code === 200) {
         // OTP verified successfully
         console.log("OTP Verified:", response.data);
-        onVerified();
-        setIsRegisterDialogOpen(true); // Open RegisterDialog
+        // Fetch user details if necessary
+
+        const user = response.data.token
+          ? await getUser(response.data.token)
+          : null;
+        if (user) {
+          setUser({
+            email: user.data.email,
+            mobile_no: user.data.mobile_no,
+            token: response.data.token,
+            user_id: response.data.user_id,
+            user_name: response.data.user_id,
+            profile_details: {
+              customer_details: {
+                customer_name: user.data.first_name,
+                nationality: user.data.nationality.country_name,
+                salutation: user.data.salutation,
+              },
+              first_name: user.data.first_name,
+              last_name: user.data.last_name,
+            },
+          });
+          onLoginSuccess();
+        } else {
+          // If user details are not available, prompt registration
+          setIsRegisterDialogOpen(true);
+        }
       } else {
         // Handle verification failure
         setAttemptsLeft((prev) => prev - 1);
         setErrorMessage(response?.message || "Invalid OTP. Please try again.");
 
         if (attemptsLeft - 1 === 0) {
-          // Exceeded maximum attempts
           setErrorMessage(
             "You have exceeded the maximum number of attempts. Please try again later."
           );
@@ -235,7 +262,7 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
 
             {/* Error Message */}
             {errorMessage && (
-              <p className="mb-4 text-red-500 text-sm self-center">
+              <p className="mb-4 text-red-500 text-sm text-center">
                 {errorMessage}
               </p>
             )}

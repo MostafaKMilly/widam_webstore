@@ -2,6 +2,7 @@
 "use client";
 import Link from "next/link";
 import styles from "./CategoryList.module.css"; // Import the CSS module
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface Category {
   item_group_id: string;
@@ -11,6 +12,7 @@ interface Category {
 }
 
 const CategoryList: React.FC<{ categories: Category[] }> = ({ categories }) => {
+  const { dictionary } = useDictionary();
   return (
     <div className="w-full flex items-center gap-4">
       <img src="/icons/three-lines-icon.svg" alt="three dots icon" />
@@ -41,7 +43,9 @@ const CategoryList: React.FC<{ categories: Category[] }> = ({ categories }) => {
           href={`/categories`}
           className={`flex flex-col items-center space-y-2 text-center text-xl font-semibold text-primary capitalize ${styles.categoryLinkParent}`}
         >
-          <span className={`${styles.categoryLink}`}>All Category</span>
+          <span className={`${styles.categoryLink}`}>
+            {dictionary["All Category"]}
+          </span>
         </Link>
         {categories.map((category) => (
           <Link

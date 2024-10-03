@@ -6,7 +6,7 @@ import Sidebar from "./Sidebar";
 
 const SettingLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
-    <main className="flex gap-5 max-md:flex-col max-w-[1400px] mx-auto mt-12">
+    <main className="flex gap-5 max-md:flex-col max-w-[1400px] mx-auto mt-12 mb-12">
       <Sidebar />
       {children}
     </main>
