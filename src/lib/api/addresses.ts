@@ -10,22 +10,36 @@ interface GetAddressesResponse {
 }
 
 export interface Address {
+  full_name: string;
   address_id: string;
   address_title: string;
   address_type: string;
   street_no: string;
   building_no: string;
-  city: string;
+  city: {
+    city_id: string;
+    city_name: string;
+  };
   zone: string;
-  area: string;
-  country: string;
+  area: {
+    area_id: string;
+    area_name: string;
+  };
+  country: {
+    country_id: string;
+    country_name: string;
+  };
   latitude: string;
   longitude: string;
+  landmark: any;
+  preferred_shipping_address: number;
   phone: string;
-  email_id: string;
-  is_shipping_address: number;
-  full_name: string;
-  landmark: string;
+  customer_id: string;
+  customer_fullname: string;
+  geofence: {
+    geofence_id: string;
+    geofence_name: string;
+  };
 }
 
 interface AddAddressResponse {
@@ -139,6 +153,7 @@ async function addAddress(
     const response = await fetch(url, requestOptions);
     if (!response.ok) {
       const result = await response.json();
+      console.log(result);
       throw new Error(result.message);
     }
     const result: AddAddressResponse = await response.json();

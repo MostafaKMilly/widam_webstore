@@ -1,5 +1,5 @@
-// PhoneInput.tsx
 import React, { useState, useEffect } from "react";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface PhoneInputProps {
   value: string;
@@ -7,31 +7,28 @@ interface PhoneInputProps {
 }
 
 const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChange }) => {
+const { dictionary } = useDictionary();
   const [error, setError] = useState<string>("");
 
-  // Regular expression to validate Qatari phone numbers
   const qatarPhoneRegex = /^[3-6]\d{7}$/;
 
-  // Validate the phone number whenever it changes
   useEffect(() => {
     if (value === "") {
       setError("");
     } else if (!/^\d+$/.test(value)) {
-      setError("Phone number must contain only digits.");
+      setError(dictionary["phoneDigitsOnly"]);
     } else if (value.length !== 8) {
-      setError("Phone number must be exactly 8 digits.");
+      setError(dictionary["phoneExactDigits"]);
     } else if (!qatarPhoneRegex.test(value)) {
-      setError("Phone number must start with 3, 4, 5, or 6.");
+      setError(dictionary["phoneStartWith"]);
     } else {
       setError("");
     }
-  }, [value]);
+  }, [value, dictionary]);
 
-  // Handle input changes with validation
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
 
-    // Allow only digits and limit to 8 characters
     if (/^\d{0,8}$/.test(inputValue)) {
       onChange(inputValue);
     }
@@ -44,7 +41,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChange }) => {
           loading="lazy"
           src="https://cdn.builder.io/api/v1/image/assets/TEMP/ed0033c9904d0b827f47e8a4ba0987c4f99dd0b523cf6d26947817f4387f16ba?placeholderIfAbsent=true&apiKey=9810db3822b54ab583e896edd833d595"
           className="w-12 h-auto rounded-sm object-contain mr-2"
-          alt="Country flag"
+          alt={dictionary["countryFlag"]}
         />
         <span className="text-lg font-semibold text-neutral-700 mr-2">
           +974
@@ -54,8 +51,8 @@ const PhoneInput: React.FC<PhoneInputProps> = ({ value, onChange }) => {
           className={`flex-1 text-lg font-medium text-neutral-500 bg-transparent border-b ${
             error ? "border-red-500" : "border-neutral-300"
           } focus:outline-none focus:border-blue-500`}
-          placeholder="Enter your mobile no."
-          aria-label="Enter your mobile number"
+          placeholder={dictionary["enterPhonePlaceholder"]}
+          aria-label={dictionary["enterPhoneLabel"]}
           value={value}
           onChange={handleInputChange}
           aria-invalid={error ? "true" : "false"}

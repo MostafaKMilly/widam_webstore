@@ -1,4 +1,4 @@
-// store/cartStore.ts
+// /lib/store/cartStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

@@ -1,8 +1,14 @@
+"use client";
+
+import { useDictionary } from "@/lib/hooks/useDictionary";
+
 const SearchBar: React.FC = () => {
+  const { dictionary } = useDictionary();
+
   return (
     <form className="flex flex-wrap gap-3.5 self-stretch px-4 py-3 text-lg bg-white max-w-[801.792px] w-[35vw] rounded-md text-neutral-700 md:px-6">
       <label htmlFor="searchInput" className="sr-only">
-        Search for any product
+        {dictionary.search_for_any_product}
       </label>
       <img
         loading="lazy"
@@ -13,7 +19,7 @@ const SearchBar: React.FC = () => {
       <input
         type="text"
         id="searchInput"
-        placeholder="Search for any product"
+        placeholder={dictionary.search_for_any_product}
         className="flex-auto bg-transparent border-none outline-none"
       />
     </form>

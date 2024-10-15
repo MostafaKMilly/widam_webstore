@@ -1,9 +1,17 @@
 "use client";
 import LocationSelection from "@/components/LocationSelection/LocationSelection";
+import { getUser } from "@/lib/api/profile";
+import { useDictionary } from "@/lib/hooks/useDictionary";
+import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 
 const DeliverSelection: React.FC = () => {
   const [isLocationSelectionOpen, setIsLocationSelectionOpen] = useState(false);
+  const { dictionary } = useDictionary();
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getUser(),
+  });
 
   const handleOpenLocationSelection = () => {
     setIsLocationSelectionOpen(true);
@@ -33,7 +41,9 @@ const DeliverSelection: React.FC = () => {
           className="object-contain shrink-0 self-start aspect-[0.86] w-[30px]"
         />
         <div>
-          <span className="text-white font-normal">Deliver to</span>
+          <span className="text-white font-normal">
+            {dictionary.deliver_to}
+          </span>
           <br />
           Al Sadd, Qatar
         </div>

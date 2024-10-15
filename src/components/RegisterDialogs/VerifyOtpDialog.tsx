@@ -1,4 +1,3 @@
-// components/VerifyOtpDialog.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog } from "@headlessui/react";
 import { XIcon } from "lucide-react";
@@ -6,6 +5,7 @@ import { sendOtp, verifyOtp } from "@/lib/queries/authApi";
 import RegisterDialog from "./RegisterDialog";
 import useUserStore from "@/lib/store/userStore";
 import { getUser } from "@/lib/api/profile";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface VerifyOtpDialogProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
   phoneNumber,
   onLoginSuccess,
 }) => {
+  const { dictionary } = useDictionary();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(36);
   const [attemptsLeft, setAttemptsLeft] = useState(4);
@@ -63,19 +64,10 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
     }
   };
 
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
   const handleVerify = async () => {
     const enteredOtp = otp.join("");
     if (enteredOtp.trim().length !== 6) {
-      setErrorMessage("Please enter the 6-digit OTP.");
+      setErrorMessage(dictionary["enter6DigitOtp"]);
       return;
     }
 
@@ -89,10 +81,6 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
       });
 
       if (response && response.status_code === 200) {
-        // OTP verified successfully
-        console.log("OTP Verified:", response.data);
-        // Fetch user details if necessary
-
         const user = response.data.token
           ? await getUser(response.data.token)
           : null;
@@ -115,25 +103,18 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
           });
           onLoginSuccess();
         } else {
-          // If user details are not available, prompt registration
           setIsRegisterDialogOpen(true);
         }
       } else {
-        // Handle verification failure
         setAttemptsLeft((prev) => prev - 1);
-        setErrorMessage(response?.message || "Invalid OTP. Please try again.");
+        setErrorMessage(response?.message || dictionary["invalidOtp"]);
 
         if (attemptsLeft - 1 === 0) {
-          setErrorMessage(
-            "You have exceeded the maximum number of attempts. Please try again later."
-          );
+          setErrorMessage(dictionary["maxAttemptsExceeded"]);
         }
       }
     } catch (error) {
-      console.error("Error verifying OTP:", error);
-      setErrorMessage(
-        "An error occurred while verifying OTP. Please try again."
-      );
+      setErrorMessage(dictionary["otpVerificationError"]);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,7 +124,6 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
     try {
       const response = await sendOtp({ mobile_no: phoneNumber });
       if (response && response.status_code === 200) {
-        console.log("OTP Resent:", response.data);
         setTimer(36);
         setIsResendDisabled(true);
         setErrorMessage("");
@@ -151,15 +131,10 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
         setOtp(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
       } else {
-        setErrorMessage(
-          response?.message || "Failed to resend OTP. Please try again."
-        );
+        setErrorMessage(dictionary["otpResendFailed"]);
       }
     } catch (error) {
-      console.error("Error resending OTP:", error);
-      setErrorMessage(
-        "An error occurred while resending OTP. Please try again."
-      );
+      setErrorMessage(dictionary["otpResendError"]);
     }
   };
 
@@ -171,32 +146,12 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
     return `${mins}:${secs}`;
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasteData = e.clipboardData.getData("text");
-    if (!/^\d{6}$/.test(pasteData)) {
-      e.preventDefault();
-      return;
-    }
-    const pasteOtp = pasteData.split("");
-    setOtp(pasteOtp);
-    pasteOtp.forEach((digit, idx) => {
-      if (inputRefs.current[idx]) {
-        inputRefs.current[idx]!.value = digit;
-      }
-    });
-    inputRefs.current[5]?.focus();
-  };
-
-  const resetState = () => {
+  const handleClose = () => {
     setOtp(["", "", "", "", "", ""]);
     setTimer(36);
     setAttemptsLeft(4);
     setIsResendDisabled(true);
     setErrorMessage("");
-  };
-
-  const handleClose = () => {
-    resetState();
     onClose();
   };
 
@@ -207,36 +162,27 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
 
   return (
     <>
-      {/* Verify OTP Dialog */}
       <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
-        {/* Overlay */}
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
-        {/* Centered Panel */}
         <div className="fixed inset-0 flex  items-start top-14 justify-center p-4">
           <Dialog.Panel className="relative flex flex-col rounded-lg max-w-[600px] w-full bg-white p-8 shadow-lg">
-            {/* Close Button */}
             <button
               onClick={handleClose}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              aria-label="Close dialog"
+              aria-label={dictionary["closeDialog"]}
             >
               <XIcon className="h-6 w-6" />
             </button>
 
-            {/* Title */}
             <Dialog.Title className="text-2xl font-semibold text-sky-900 mb-4">
-              Hello Again!
-              <br /> Let&apos;s verify your number.
+              {dictionary["verifyNumberTitle"]}
             </Dialog.Title>
 
-            {/* Description */}
             <Dialog.Description className="text-lg text-gray-700 mb-6">
-              We&apos;ve sent you a code. Please enter the received code to
-              proceed.
+              {dictionary["verifyNumberDescription"]}
             </Dialog.Description>
 
-            {/* OTP Inputs */}
             <div className="flex space-x-2 mb-4 self-center">
               {otp.map((digit, index) => (
                 <input
@@ -246,21 +192,15 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleChange(e.target, index)}
-                  onKeyDown={(e) => handleKeyDown(e, index)}
-                  onPaste={handlePaste}
                   ref={(el) => {
                     inputRefs.current[index] = el;
                   }}
                   className="w-[56.247px] h-[68.929px] text-center  rounded-md bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                   aria-label={`OTP Digit ${index + 1}`}
-                  style={{
-                    filter: "drop-shadow(0px 1px 0.5px rgba(0, 0, 0, 0.16))",
-                  }}
                 />
               ))}
             </div>
 
-            {/* Error Message */}
             {errorMessage && (
               <p className="mb-4 text-red-500 text-sm text-center">
                 {errorMessage}
@@ -268,10 +208,9 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
             )}
 
             <div className="flex flex-col items-center justify-center mb-6 space-y-4">
-              {/* Resend Button */}
               <div className="flex flex-col  gap-2 mt-2 items-center justify-between w-full max-w-sm">
                 <span className="text-sm text-gray-600">
-                  Don&apos;t receive the code?
+                  {dictionary["dontReceiveCode"]}
                 </span>
                 <div className="text-[#2BB9ED]">{formatTimer(timer)}</div>
                 <button
@@ -283,20 +222,20 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
                       : "text-[#707070] underline hover:underline"
                   }`}
                 >
-                  Resend my code
+                  {dictionary["resendCode"]}
                 </button>
               </div>
 
-              {/* Timer and Attempts */}
               <div className="flex flex-col items-center justify-between w-full max-w-sm">
                 <span className="text-sm text-gray-600">
-                  You have {attemptsLeft} attempt{attemptsLeft !== 1 ? "s" : ""}{" "}
-                  left
+                  {dictionary["attemptsLeft"].replace(
+                    "{attempts}",
+                    String(attemptsLeft)
+                  )}
                 </span>
               </div>
             </div>
 
-            {/* Verify Button */}
             <button
               onClick={handleVerify}
               disabled={isSubmitting}
@@ -304,13 +243,12 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
                 isSubmitting ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {isSubmitting ? "Verifying..." : "Verify"}
+              {isSubmitting ? dictionary["verifying"] : dictionary["verify"]}
             </button>
           </Dialog.Panel>
         </div>
       </Dialog>
 
-      {/* Register Dialog */}
       <RegisterDialog
         isOpen={isRegisterDialogOpen}
         onClose={handleRegisterClose}

@@ -1,4 +1,3 @@
-// DefaultAddress.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -8,17 +7,18 @@ import LocationSelection from "@/components/LocationSelection/LocationSelection"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AddAddressDialog from "../home/address/AddAddressDialog";
 import DefaultAddress from "../home/address/DefaultAddress";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 const AddressComponent: React.FC = () => {
+  const { dictionary } = useDictionary();
   const queryClient = useQueryClient();
 
-  // State for dialogs and selected location
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
   const [isAddAddressDialogOpen, setIsAddAddressDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: string;
     longitude: string;
-    address: string; // Store address here
+    address: string;
   } | null>(null);
 
   const {
@@ -29,7 +29,6 @@ const AddressComponent: React.FC = () => {
   } = useQuery({
     queryKey: ["addresses"],
     queryFn: () => getAddresses().then((res) => res?.data),
-    // Refetch on window focus
     refetchOnWindowFocus: false,
   });
 
@@ -37,29 +36,23 @@ const AddressComponent: React.FC = () => {
     mutationFn: (newAddress: Omit<Address, "address_id">) =>
       addAddress(newAddress as any).then((res) => res?.data),
     onSuccess: () => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["addresses"] });
     },
   });
 
-  // Handler for adding a new address
   const handleAddAddress = async (
     newAddress: Omit<Address, "address_id">
   ): Promise<void> => {
     try {
       await addAddressMutation.mutateAsync(newAddress);
-      // The dialog will close upon successful addition
       setIsAddAddressDialogOpen(false);
     } catch (error) {
       console.error("Error adding address:", error);
-      // Handle error appropriately, e.g., show a notification
-      throw error; // Propagate the error to the dialog
+      throw error;
     }
   };
 
-  // Handler for selecting a location
   const handleLocationSelect = (latitude: string, longitude: string) => {
-    // Use reverse geocoding to get the address
     const geocoder = new google.maps.Geocoder();
     const latLng = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
 
@@ -79,7 +72,6 @@ const AddressComponent: React.FC = () => {
     });
   };
 
-  // Handler for opening the Add New Address dialog
   const handleAddNewAddress = () => {
     setSelectedLocation(null);
     setIsLocationDialogOpen(true);
@@ -96,38 +88,37 @@ const AddressComponent: React.FC = () => {
           boxShadow: "2px 2px 2.5px 0px rgba(0, 0, 0, 0.16)",
         }}
       >
-        {/* Loading State */}
         {isLoading && (
-          <p className="text-center text-gray-500">Loading addresses...</p>
-        )}
-
-        {/* Error State */}
-        {isError && (
-          <p className="text-center text-red-500">
-            Error fetching addresses: {error.message}
+          <p className="text-center text-gray-500">
+            {dictionary["loadingAddresses"]}
           </p>
         )}
 
-        {/* Addresses List */}
+        {isError && (
+          <p className="text-center text-red-500">
+            {dictionary["errorFetchingAddresses"]}: {error.message}
+          </p>
+        )}
+
         {!isLoading && !isError && addresses && addresses.length !== 0 && (
           <div>
-            <p className="mb-2">Existing Addresses ({addresses.length})</p>
+            <p className="mb-2">
+              {dictionary["existingAddresses"]} ({addresses.length})
+            </p>
             {addresses.map((address) => (
               <DefaultAddress key={address.address_id} address={address} />
             ))}
           </div>
         )}
 
-        {/* Add New Address Button */}
         <button
           onClick={handleAddNewAddress}
           className="mt-4 w-full flex items-center justify-center px-4 py-2 text-[#0055bb] text-lg font-semibold font-Montserrat focus:outline-none focus:ring-2 focus:ring-blue-400 transition-transform duration-150 active:scale-95"
         >
-          <span className="mr-2 text-2xl">+</span> Add New Address
+          <span className="mr-2 text-2xl">+</span> {dictionary["addNewAddress"]}
         </button>
       </div>
 
-      {/* Location Selection Dialog */}
       <LocationSelection
         isOpen={isLocationDialogOpen}
         onClose={() => setIsLocationDialogOpen(false)}
@@ -135,7 +126,6 @@ const AddressComponent: React.FC = () => {
         initialLocation={selectedLocation || { latitude: "", longitude: "" }}
       />
 
-      {/* Add Address Dialog */}
       <AddAddressDialog
         isOpen={isAddAddressDialogOpen}
         onClose={() => setIsAddAddressDialogOpen(false)}

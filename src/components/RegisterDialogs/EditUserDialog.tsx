@@ -1,8 +1,8 @@
-// EditProfileDialog.tsx
 import React, { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { XIcon } from "lucide-react";
 import { User } from "@/lib/types/user.type";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -21,12 +21,13 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
   isSubmitting,
   errorMessage,
 }) => {
+  const { dictionary } = useDictionary();
+
   const [salutation, setSalutation] = useState<string>(user.salutation || "");
   const [firstName, setFirstName] = useState<string>(user.first_name || "");
   const [lastName, setLastName] = useState<string>(user.last_name || "");
   const [email, setEmail] = useState<string>(user.email || "");
 
-  // Regular expression for basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const isFormValid =
@@ -60,20 +61,19 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            aria-label="Close dialog"
+            aria-label={dictionary["closeDialog"]}
           >
             <XIcon className="h-6 w-6" />
           </button>
 
           <Dialog.Title className="text-2xl font-semibold text-sky-900 mb-4">
-            Edit Profile
+            {dictionary["editProfile"]}
           </Dialog.Title>
 
-          {/* Form fields */}
           <div className="mb-6">
             <fieldset>
               <legend className="block text-sm font-medium text-gray-700 mb-2">
-                Title
+                {dictionary["title"]}
               </legend>
               <div className="flex space-x-4">
                 <label className="inline-flex items-center">
@@ -85,7 +85,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                     onChange={(e) => setSalutation(e.target.value)}
                     className="form-radio h-4 w-4 text-sky-600"
                   />
-                  <span className="ml-2">Mr.</span>
+                  <span className="ml-2">{dictionary["mr"]}</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
@@ -96,7 +96,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                     onChange={(e) => setSalutation(e.target.value)}
                     className="form-radio h-4 w-4 text-sky-600"
                   />
-                  <span className="ml-2">Miss/Ms.</span>
+                  <span className="ml-2">{dictionary["missMs"]}</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
@@ -107,7 +107,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                     onChange={(e) => setSalutation(e.target.value)}
                     className="form-radio h-4 w-4 text-sky-600"
                   />
-                  <span className="ml-2">Mrs.</span>
+                  <span className="ml-2">{dictionary["mrs"]}</span>
                 </label>
               </div>
             </fieldset>
@@ -118,13 +118,13 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
               htmlFor="firstName"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              First Name
+              {dictionary["firstName"]}
             </label>
             <input
               type="text"
               id="firstName"
               className="w-full border-b border-gray-300 focus:outline-none focus:border-sky-500 pb-2"
-              placeholder="Enter your first name"
+              placeholder={dictionary["enterFirstName"]}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
@@ -135,13 +135,13 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
               htmlFor="lastName"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Last Name
+              {dictionary["lastName"]}
             </label>
             <input
               type="text"
               id="lastName"
               className="w-full border-b border-gray-300 focus:outline-none focus:border-sky-500 pb-2"
-              placeholder="Enter your last name"
+              placeholder={dictionary["enterLastName"]}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
@@ -152,13 +152,13 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Email Address (optional)
+              {dictionary["emailAddressOptional"]}
             </label>
             <input
               type="email"
               id="email"
               className="w-full border-b border-gray-300 focus:outline-none focus:border-sky-500 pb-2"
-              placeholder="Enter your email address"
+              placeholder={dictionary["enterEmail"]}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -177,7 +177,7 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
               (!isFormValid || isSubmitting) && "opacity-50 cursor-not-allowed"
             }`}
           >
-            {isSubmitting ? "Saving..." : "Save"}
+            {isSubmitting ? dictionary["saving"] : dictionary["save"]}
           </button>
         </Dialog.Panel>
       </div>

@@ -1,9 +1,9 @@
-// RegisterDialog.tsx
 import React, { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { XIcon } from "lucide-react";
 import { register } from "@/lib/queries/authApi"; // Adjust the import path as needed
 import useUserStore from "@/lib/store/userStore";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface RegisterDialogProps {
   isOpen: boolean;
@@ -16,6 +16,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
   onClose,
   phoneNumber,
 }) => {
+  const { dictionary } = useDictionary();
   const [salutation, setSalutation] = useState<string>("");
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
@@ -25,7 +26,6 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const setUser = useUserStore((state) => state.setUser);
 
-  // Regular expression for basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const isFormValid =
@@ -37,7 +37,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
 
   const handleSubmit = async () => {
     if (!isFormValid) {
-      setErrorMessage("Please fill out all required fields correctly.");
+      setErrorMessage(dictionary["fillRequiredFields"]);
       return;
     }
 
@@ -55,19 +55,13 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
       });
 
       if (response && response.status_code === 201 && response.error === 0) {
-        console.log("User registered successfully:", response.data);
         onClose();
         setUser(response.data);
       } else {
-        setErrorMessage(
-          response?.message || "Registration failed. Please try again."
-        );
+        setErrorMessage(response?.message || dictionary["registrationFailed"]);
       }
     } catch (error) {
-      console.error("Error registering user:", error);
-      setErrorMessage(
-        "An error occurred during registration. Please try again."
-      );
+      setErrorMessage(dictionary["registrationError"]);
     } finally {
       setIsSubmitting(false);
     }
@@ -82,25 +76,24 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            aria-label="Close dialog"
+            aria-label={dictionary["closeDialog"]}
           >
             <XIcon className="h-6 w-6" />
           </button>
 
           <Dialog.Title className="text-2xl font-semibold text-sky-900 mb-4 ">
-            New account!
+            {dictionary["newAccount"]}
           </Dialog.Title>
 
           <Dialog.Description className="text-lg text-gray-700 mb-6">
-            No account linked to your phone number. We&apos;ll create a new one
-            using this number:{" "}
+            {dictionary["noAccountMessage"]}{" "}
             <span className="font-medium text-primary">+974{phoneNumber}</span>
           </Dialog.Description>
 
           <div className="mb-6">
             <fieldset>
               <legend className="block text-sm font-medium text-gray-700 mb-2">
-                Title
+                {dictionary["title"]}
               </legend>
               <div className="flex space-x-4">
                 <label className="inline-flex items-center">
@@ -112,7 +105,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
                     onChange={(e) => setSalutation(e.target.value)}
                     className="form-radio h-4 w-4 text-sky-600"
                   />
-                  <span className="ml-2">Mr.</span>
+                  <span className="ml-2">{dictionary["mr"]}</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
@@ -123,7 +116,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
                     onChange={(e) => setSalutation(e.target.value)}
                     className="form-radio h-4 w-4 text-sky-600"
                   />
-                  <span className="ml-2">Miss/Ms.</span>
+                  <span className="ml-2">{dictionary["missMs"]}</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
@@ -134,7 +127,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
                     onChange={(e) => setSalutation(e.target.value)}
                     className="form-radio h-4 w-4 text-sky-600"
                   />
-                  <span className="ml-2">Mrs.</span>
+                  <span className="ml-2">{dictionary["mrs"]}</span>
                 </label>
               </div>
             </fieldset>
@@ -145,13 +138,13 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
               htmlFor="firstName"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              First Name
+              {dictionary["firstName"]}
             </label>
             <input
               type="text"
               id="firstName"
               className="w-full border-b border-gray-300 focus:outline-none focus:border-sky-500 pb-2"
-              placeholder="Enter your first name"
+              placeholder={dictionary["enterFirstName"]}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
@@ -162,13 +155,13 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
               htmlFor="lastName"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Last Name
+              {dictionary["lastName"]}
             </label>
             <input
               type="text"
               id="lastName"
               className="w-full border-b border-gray-300 focus:outline-none focus:border-sky-500 pb-2"
-              placeholder="Enter your last name"
+              placeholder={dictionary["enterLastName"]}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
@@ -179,13 +172,13 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Email Address (optional)
+              {dictionary["emailAddressOptional"]}
             </label>
             <input
               type="email"
               id="email"
               className="w-full border-b border-gray-300 focus:outline-none focus:border-sky-500 pb-2"
-              placeholder="Enter your email address"
+              placeholder={dictionary["enterEmail"]}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -200,7 +193,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
               className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
             />
             <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-              I have read and agree to the Terms and Conditions
+              {dictionary["termsAndConditions"]}
             </label>
           </div>
 
@@ -217,7 +210,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
               (!isFormValid || isSubmitting) && "opacity-50 cursor-not-allowed"
             }`}
           >
-            {isSubmitting ? "Registering..." : "Register"}
+            {isSubmitting ? dictionary["registering"] : dictionary["register"]}
           </button>
         </Dialog.Panel>
       </div>

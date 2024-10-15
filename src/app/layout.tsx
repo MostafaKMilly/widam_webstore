@@ -48,13 +48,15 @@ export default async function RootLayout({
       </head>
       <body
         className={`flex flex-col min-h-screen ${
-          language === "ar" ? roboto.variable : montserrat.variable
+          language === "ar"
+            ? `${roboto.variable} ${roboto.className}`
+            : `${montserrat.variable} ${montserrat.className}`
         }`}
       >
         <Providers>
           <DictionaryProvider dictionary={dict}>
             <MainHeader />
-            {/* Add padding-top to prevent content from being hidden behind the fixed header */}
+
             <main className="flex-grow pt-40">{children}</main>
             <Footer />
             <Toaster

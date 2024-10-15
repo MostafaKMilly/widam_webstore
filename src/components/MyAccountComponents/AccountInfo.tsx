@@ -1,7 +1,7 @@
-// AccountInfo.tsx
 import React from "react";
 import { User as UserIcon } from "lucide-react";
 import { User } from "@/lib/types/user.type";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 interface AccountInfoProps {
   user: User;
@@ -21,6 +21,8 @@ const AccountInfoItem: React.FC<AccountInfoItemProps> = ({ label, value }) => (
 );
 
 const AccountInfo: React.FC<AccountInfoProps> = ({ user, onEdit }) => {
+  const { dictionary } = useDictionary();
+
   return (
     <section
       className="flex flex-col p-5 mt-6 w-full bg-white rounded border border-gray-200 shadow-sm max-md:p-4"
@@ -41,14 +43,23 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user, onEdit }) => {
 
       {/* Account Information */}
       <div className="flex flex-wrap gap-8 py-4 px-4 mt-8 bg-neutral-100 rounded shadow-inner max-md:flex-col max-md:mt-6">
-        <AccountInfoItem label="Email Address" value={user.email} />
+        <AccountInfoItem
+          label={dictionary["emailAddress"]}
+          value={user.email}
+        />
         <div className="flex items-start gap-5">
           <div className="w-0.5 bg-sky-200 self-start h-12" />
-          <AccountInfoItem label="Mobile Number" value={"+" + user.mobile_no} />
+          <AccountInfoItem
+            label={dictionary["mobileNumber"]}
+            value={"+" + user.mobile_no}
+          />
         </div>
         <div className="flex items-start gap-5">
           <div className="w-0.5 bg-sky-200 self-start h-12" />
-          <AccountInfoItem label="Title" value={user?.salutation} />
+          <AccountInfoItem
+            label={dictionary["title"]}
+            value={user?.salutation}
+          />
         </div>
       </div>
 
@@ -58,7 +69,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({ user, onEdit }) => {
             className="border border-primary text-primary px-4 py-2 w-24 rounded hover:bg-primary hover:text-white transition-colors"
             onClick={onEdit}
           >
-            Edit
+            {dictionary["edit"]}
           </button>
         </div>
       )}

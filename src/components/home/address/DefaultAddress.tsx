@@ -1,13 +1,48 @@
 // DefaultAddress.tsx
-import React from "react";
+"use client";
+
+import React, { useEffect, useRef, useState, Fragment } from "react";
 import { Address } from "@/lib/api/addresses";
+import { Trash2, Edit2 } from "lucide-react"; // Importing Trash and Edit icons
+import { Dialog, Transition } from "@headlessui/react"; // Import Headless UI components
 
 interface DefaultAddressProps {
   address: Address;
+  onDelete?: () => void; // Add onDelete prop
 }
 
-const DefaultAddress: React.FC<DefaultAddressProps> = ({ address }) => {
+const DefaultAddress: React.FC<DefaultAddressProps> = ({
+  address,
+  onDelete,
+}) => {
   const { latitude, longitude } = address || {};
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+
+  // State for confirmation dialog
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const initMap = (latitude: number, longitude: number) => {
+    if (mapRef.current) {
+      const googleMap = new google.maps.Map(mapRef.current, {
+        center: { lat: latitude, lng: longitude },
+        zoom: 15,
+        zoomControl: false,
+        streetViewControl: false,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        disableDefaultUI: true,
+      });
+
+      setMap(googleMap);
+    }
+  };
+
+  useEffect(() => {
+    if (latitude && longitude && !map) {
+      initMap(parseFloat(latitude), parseFloat(longitude));
+    }
+  }, [latitude, longitude, map]);
 
   return (
     <div
@@ -17,16 +52,14 @@ const DefaultAddress: React.FC<DefaultAddressProps> = ({ address }) => {
         boxShadow: "2px 2px 2.5px 0px rgba(0, 0, 0, 0.16)",
       }}
     >
-      <div className="flex gap-5 max-md:flex-col">
+      <div className="flex justify-between gap-5 max-md:flex-col">
         <div className="flex flex-col max-md:ml-0 max-md:w-full">
           {latitude && longitude ? (
-            <iframe
-              title="Address Location"
-              src={`https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY}&center=${latitude},${longitude}&zoom=15`}
+            <div
+              ref={mapRef}
               className="object-contain shrink-0 rounded aspect-square w-[90px] max-md:mt-8"
-              allowFullScreen
-              loading="lazy"
-            ></iframe>
+              style={{ height: "110px", width: "100%" }}
+            />
           ) : (
             <img
               loading="lazy"
@@ -45,15 +78,92 @@ const DefaultAddress: React.FC<DefaultAddressProps> = ({ address }) => {
               <br />
               <span className="text-neutral-800">{address.full_name}</span>
               <br />
-              {address.building_no}, {address.street_no}, {address.city},{" "}
-              {address.zone}, {address.country}
+              {address.building_no}, {address.street_no},{" "}
+              {address.city.city_name}, {address.zone},{" "}
+              {address.country.country_name}
             </div>
             <div className="self-start mt-1.5 text-sky-800">
               {address.phone}
             </div>
           </div>
         </div>
+        <div className="flex items-center space-x-2">
+          {onDelete && (
+            <button
+              onClick={() => setIsDialogOpen(true)}
+              className="text-red-500 hover:text-red-700"
+              aria-label="Delete Address"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Transition appear show={isDialogOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-10 overflow-y-auto"
+          onClose={() => setIsDialogOpen(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            {/* Trick the browser into centering the modal */}
+            <span
+              className="inline-block h-screen align-middle"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+
+            {/* Modal Content */}
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
+                <Dialog.Title
+                  as="h3"
+                  className="text-lg font-medium leading-6 text-gray-900"
+                >
+                  Delete Address
+                </Dialog.Title>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to delete this address? This action
+                    cannot be undone.
+                  </p>
+                </div>
+
+                <div className="mt-4 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
+                    onClick={() => {
+                      onDelete?.();
+                      setIsDialogOpen(false);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   );
 };

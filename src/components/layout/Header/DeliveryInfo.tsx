@@ -1,8 +1,15 @@
+"use server"
 import getUtils from "@/lib/queries/getUtils";
 import DeliverSelection from "./DeliverSelection";
+import { getDictionary } from "@/app/dictionaries";
+import { cookies } from "next/headers";
 
 const DeliveryInfo: React.FC = async () => {
   const data = await getUtils();
+  const cookiesStore = cookies();
+  const language = cookiesStore.get("language")?.value || "en";
+
+  const dict = await getDictionary(language as "en" | "ar");
 
   const dateFormatted = data?.data.delivery_date.date_formatted;
   let convertedDate = "";
@@ -25,7 +32,7 @@ const DeliveryInfo: React.FC = async () => {
       <div className="flex gap-2 items-center ml-2">
         <img src="/icons/delivery-icon.svg" />
         <div className="w-[76px]  text-white text-base font-medium ">
-          Earliest Delivery
+          {dict.earlies_delivery}
         </div>
       </div>
       <div className="flex ml-2 w-fit px-1 h-[36.782px] bg-[#F7F6FA] rounded-sm items-center gap-1">

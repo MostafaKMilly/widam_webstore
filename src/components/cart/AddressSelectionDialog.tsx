@@ -1,20 +1,25 @@
-// AddressComponent.tsx
+// components/AddressSelectionDialog.tsx
 "use client";
 
 import React, { useState } from "react";
-import {
-  Address,
-  getAddresses,
-  addAddress,
-  deleteAddress,
-} from "@/lib/api/addresses";
-import DefaultAddress from "./DefaultAddress";
+import { Dialog } from "@headlessui/react";
+import { Address, getAddresses, addAddress } from "@/lib/api/addresses";
 import LocationSelection from "@/components/LocationSelection/LocationSelection";
-import AddAddressDialog from "./AddAddressDialog";
+import DefaultAddress from "../home/address/DefaultAddress";
+import AddAddressDialog from "../home/address/AddAddressDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react"; // Updated icon import
 
-const AddressComponent: React.FC = () => {
+interface AddressSelectionDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectAddress: (address: Address) => void;
+}
+
+const AddressSelectionDialog: React.FC<AddressSelectionDialogProps> = ({
+  isOpen,
+  onClose,
+  onSelectAddress,
+}) => {
   const queryClient = useQueryClient();
 
   // State for dialogs and selected location
@@ -23,7 +28,7 @@ const AddressComponent: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: string;
     longitude: string;
-    address: string; // Store address here
+    address: string;
   } | null>(null);
 
   // Fetch Addresses using useQuery
@@ -45,19 +50,6 @@ const AddressComponent: React.FC = () => {
     onSuccess: () => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["addresses"] });
-    },
-  });
-
-  // Mutation for deleting an address
-  const deleteAddressMutation = useMutation({
-    mutationFn: (addressId: string) => deleteAddress({ address_id: addressId }),
-    onSuccess: () => {
-      // Invalidate and refetch addresses
-      queryClient.refetchQueries({ queryKey: ["addresses"] });
-    },
-    onError: (error: any) => {
-      console.error("Error deleting address:", error);
-      // Optionally, handle error (e.g., show a notification)
     },
   });
 
@@ -101,72 +93,75 @@ const AddressComponent: React.FC = () => {
   // Handler for opening the Add New Address dialog
   const handleAddNewAddress = () => {
     setSelectedLocation(null);
+    onClose();
     setIsLocationDialogOpen(true);
   };
 
-  // Handler for deleting an address
-  const handleDeleteAddress = async (addressId: string) => {
-    try {
-      await deleteAddressMutation.mutateAsync(addressId);
-    } catch (error) {
-      // Error handling is already managed in onError
-    }
+  // Handler for selecting an existing address
+  const handleSelectExistingAddress = (address: Address) => {
+    onSelectAddress(address);
+    onClose();
   };
 
   return (
-    <div className="flex flex-col px-5 w-full bg-white max-md:pl-5 max-md:max-w-full">
-      <h2 className="self-start ml-3.5 max-md:text-xl text-[#003b82] text-2xl font-semibold max-md:ml-2.5">
-        My Addresses
-      </h2>
-
-      <div
-        className="mt-4 pb-4"
-        style={{
-          borderRadius: "4px",
-          border: "1px solid #ECECEC",
-          background: "#FFF",
-          boxShadow: "2px 2px 2.5px 0px rgba(0, 0, 0, 0.16)",
-        }}
+    <>
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        className="fixed z-50 inset-0 overflow-y-auto"
       >
-        {/* Loading State */}
-        {isLoading && (
-          <p className="text-center text-gray-500">Loading addresses...</p>
-        )}
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full mx-auto z-20 p-8 relative shadow-lg">
+            <Dialog.Title className="text-2xl font-semibold mb-6 text-center">
+              Select Address
+            </Dialog.Title>
 
-        {/* Error State */}
-        {isError && (
-          <p className="text-center text-red-500">
-            Error fetching addresses: {error.message}
-          </p>
-        )}
+            {/* Loading State */}
+            {isLoading && (
+              <p className="text-center text-gray-500">Loading addresses...</p>
+            )}
 
-        {/* Addresses List */}
-        {!isLoading && !isError && addresses && addresses.length !== 0 && (
-          <div className="p-4">
-            <div>
-              <span className="text-[#232323] text-xl max-md:text-lg font-semibold  capitalize">
-                Existing Addresses ({addresses.length})
-              </span>
-            </div>
+            {/* Error State */}
+            {isError && (
+              <p className="text-center text-red-500 mb-4">
+                Error fetching addresses: {error.message}
+              </p>
+            )}
 
-            {addresses.map((address) => (
-              <DefaultAddress
-                key={address.address_id}
-                address={address}
-                onDelete={() => handleDeleteAddress(address.address_id)}
-              />
-            ))}
+            {/* Addresses List */}
+            {!isLoading && !isError && addresses && addresses.length !== 0 && (
+              <div className="max-h-80 overflow-y-auto mb-6">
+                {addresses.map((address) => (
+                  <button
+                    key={address.address_id}
+                    onClick={() => handleSelectExistingAddress(address)}
+                    className="w-full text-left p-4 border rounded-lg mb-3 hover:bg-gray-100 transition-colors"
+                  >
+                    <DefaultAddress address={address} />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Add New Address Button */}
+            <button
+              onClick={handleAddNewAddress}
+              className="w-full flex items-center max-w-xs self-center mx-auto  justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              <span className="mr-3 text-2xl">+</span> Add New Address
+            </button>
+
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+              aria-label="Close"
+            >
+              &times;
+            </button>
           </div>
-        )}
-
-        {/* Add New Address Button */}
-        <button
-          onClick={handleAddNewAddress}
-          className="mt-4 w-full flex items-center justify-center px-4 py-2 text-[#0055bb] text-lg font-semibold font-Montserrat"
-        >
-          <Plus className="mr-2 text-2xl" /> Add New Address
-        </button>
-      </div>
+        </div>
+      </Dialog>
 
       {/* Location Selection Dialog */}
       <LocationSelection
@@ -190,8 +185,8 @@ const AddressComponent: React.FC = () => {
         }}
         isLoading={addAddressMutation.isPending}
       />
-    </div>
+    </>
   );
 };
 
-export default AddressComponent;
+export default AddressSelectionDialog;

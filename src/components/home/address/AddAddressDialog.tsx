@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Dialog, Switch } from "@headlessui/react";
 import { Briefcase, Building, Home, XIcon } from "lucide-react";
 import { Address } from "@/lib/api/addresses";
+import { useDictionary } from "@/lib/hooks/useDictionary";
 
 // AddressField Component with Bottom Border
 const AddressField = React.memo(function AddressField({
@@ -23,11 +24,10 @@ const AddressField = React.memo(function AddressField({
   return (
     <div className="mt-4">
       {label && (
-        <label htmlFor={id} className="block text-sm font-normal text-black ">
+        <label htmlFor={id} className="block text-sm font-normal text-black">
           {label}
         </label>
       )}
-
       <input
         type={type}
         id={id}
@@ -45,17 +45,18 @@ const AddressLabelComponent: React.FC<{
   selectedLabel: string;
   onSelectLabel: (label: string) => void;
 }> = ({ selectedLabel, onSelectLabel }) => {
+  const { dictionary } = useDictionary();
   const labels = [
     {
-      text: "Villa",
+      text: dictionary["Villa"],
       icon: Home, // Lucide Home icon
     },
     {
-      text: "Office",
+      text: dictionary["Office"],
       icon: Briefcase, // Lucide Briefcase icon
     },
     {
-      text: "Apartment",
+      text: dictionary["Apartment"],
       icon: Building, // Lucide Building icon
     },
   ];
@@ -66,7 +67,7 @@ const AddressLabelComponent: React.FC<{
         const IconComponent = label.icon;
         return (
           <button
-            key={label.text} // Use label text as key for uniqueness
+            key={label.text}
             onClick={() => onSelectLabel(label.text)}
             className={`flex items-center gap-2 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 ${
               selectedLabel === label.text
@@ -74,7 +75,7 @@ const AddressLabelComponent: React.FC<{
                 : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
             }`}
           >
-            <IconComponent className="w-5 h-5" /> {/* Render the Lucide Icon */}
+            <IconComponent className="w-5 h-5" />
             <span>{label.text}</span>
           </button>
         );
@@ -104,6 +105,8 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
   handleEditLocation,
   isLoading,
 }) => {
+  const { dictionary } = useDictionary();
+
   // Form state
   const [addressTitle, setAddressTitle] = useState<string>("");
   const [zoneNumber, setZoneNumber] = useState<string>("");
@@ -111,15 +114,15 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
   const [buildingNo, setBuildingNo] = useState<string>("");
   const [fullName, setFullName] = useState<string>("");
   const [mobileNo, setMobileNo] = useState<string>("");
-  const [selectedLabel, setSelectedLabel] = useState<string>("Villa");
+  const [selectedLabel, setSelectedLabel] = useState<string>(
+    dictionary["Villa"]
+  );
   const [isDefaultAddress, setIsDefaultAddress] = useState<boolean>(false);
   const currentLocation = initialLocation;
-
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSubmit = async () => {
-    // Basic validation
     if (
       !addressTitle ||
       !zoneNumber ||
@@ -129,7 +132,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
       !mobileNo ||
       !selectedLabel
     ) {
-      setErrorMessage("Please fill out all required fields.");
+      setErrorMessage(dictionary["pleaseSelect"]);
       return;
     }
 
@@ -138,32 +141,30 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
       address_type: selectedLabel,
       street_no: streetNo,
       building_no: buildingNo,
-      city: "", // Adjust if needed
+      city: "",
       zone: zoneNumber,
-      area: "", // Adjust if needed
-      country: "", // Adjust if needed
+      area: "",
+      country: "",
       latitude: currentLocation.latitude,
       longitude: currentLocation.longitude,
       phone: mobileNo,
-      email_id: "", // Adjust if needed
+      email_id: "",
       is_shipping_address: isDefaultAddress ? 1 : 0,
       full_name: fullName,
-      landmark: "", // Adjust if needed
+      landmark: "",
     };
 
     setIsSubmitting(true);
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
 
     try {
-      await onAddAddress(newAddress); // Await the API call
+      await onAddAddress(newAddress);
       setIsSubmitting(false);
-      onClose(); // Close the dialog upon success
+      onClose();
       handleReset();
     } catch (error: any) {
       console.error("Error adding address:", error);
-      setErrorMessage(
-        error.message || "Failed to add address. Please try again."
-      );
+      setErrorMessage(error.message || dictionary["errorAddingAddress"]);
       setIsSubmitting(false);
     }
   };
@@ -175,7 +176,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
     setBuildingNo("");
     setFullName("");
     setMobileNo("");
-    setSelectedLabel("Villa");
+    setSelectedLabel(dictionary["Villa"]);
     setIsDefaultAddress(false);
     setErrorMessage("");
     setIsSubmitting(false);
@@ -190,43 +191,36 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
       }}
       className="relative z-50"
     >
-      {/* Overlay */}
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
-      {/* Dialog Panel */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="relative w-full max-w-3xl bg-white rounded-lg shadow-xl overflow-y-auto max-h-full p-6">
-          {/* Close Button */}
           <button
             onClick={() => {
               onClose();
               handleReset();
             }}
             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            aria-label="Close dialog"
-            disabled={isSubmitting} // Disable close button while submitting
+            aria-label={dictionary["closeDialog"]}
+            disabled={isSubmitting}
           >
             <XIcon className="h-6 w-6" />
           </button>
 
-          {/* Dialog Title */}
           <Dialog.Title className="text-2xl font-semibold text-sky-700 mb-4">
-            Add New Address
+            {dictionary["add_new_address"]}
           </Dialog.Title>
 
-          {/* Map Display */}
           <div className="mb-6">
             <div className="relative h-64 w-full rounded-lg overflow-hidden">
-              {/* Embed Google Maps */}
               <iframe
-                title="Selected Location"
+                title={dictionary["SelectedLocation"]}
                 src={`https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY}&center=${currentLocation.latitude},${currentLocation.longitude}&zoom=15`}
                 className="w-full h-full"
                 allowFullScreen
               ></iframe>
             </div>
 
-            {/* Display the human-readable address */}
             <div className="mt-4 flex justify-between items-center">
               <span className="text-[#444444] text-md font-medium">
                 {currentLocation.address}
@@ -236,48 +230,46 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
                 <button
                   onClick={handleEditLocation}
                   className="text-[#004990] text-md font-bold"
-                  disabled={isSubmitting} // Disable edit button while submitting
+                  disabled={isSubmitting}
                 >
-                  Edit
+                  {dictionary["edit"]}
                 </button>
               )}
             </div>
           </div>
-          {/* Address Form Fields */}
+
           <div className="space-y-4">
-            {/* Address Title */}
             <div className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
-              Address Title
+              {dictionary["addressTitle"]}
             </div>
 
             <AddressField
               label=""
-              placeholder="Address Title" // Omitted label
+              placeholder={dictionary["addressTitle"]}
               value={addressTitle}
               onChange={setAddressTitle}
             />
 
-            {/* Address Details */}
             <div className="pt-4">
               <div className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
-                Address Details
+                {dictionary["addressDetails"]}
               </div>
 
               <AddressField
-                label="Zone Number"
-                placeholder="Enter your zone number"
+                label={dictionary["zoneNumber"]}
+                placeholder={dictionary["enterZoneNumber"]}
                 value={zoneNumber}
                 onChange={setZoneNumber}
               />
               <AddressField
-                label="Street No."
-                placeholder="Enter your street number"
+                label={dictionary["streetNo"]}
+                placeholder={dictionary["enterStreetNumber"]}
                 value={streetNo}
                 onChange={setStreetNo}
               />
               <AddressField
-                label="Building No."
-                placeholder="Enter your building number"
+                label={dictionary["buildingNo"]}
+                placeholder={dictionary["enterBuildingNumber"]}
                 value={buildingNo}
                 onChange={setBuildingNo}
               />
@@ -285,7 +277,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
 
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm font-medium text-gray-700">
-                Make This Default
+                {dictionary["makeThisDefault"]}
               </span>
               <Switch
                 checked={isDefaultAddress}
@@ -302,51 +294,46 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
               </Switch>
             </div>
 
-            {/* Receiver Information */}
             <div className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
-              Receiver Information
+              {dictionary["receiverInformation"]}
             </div>
 
             <AddressField
-              label="Full Name"
-              placeholder="Enter full name"
+              label={dictionary["fullName"]}
+              placeholder={dictionary["enterFullName"]}
               value={fullName}
               onChange={setFullName}
             />
 
-            {/* Mobile Number with Qatar Flag */}
             <div className="mt-4">
               <label
                 htmlFor="mobile-no"
                 className="block text-sm font-medium text-gray-700"
               >
-                Mobile No.
+                {dictionary["mobileNo"]}
               </label>
               <div className="mt-1 flex items-center border-b-2 border-gray-300 focus-within:border-sky-500 transition-colors duration-200">
-                {/* Qatar Flag and Country Code */}
                 <div className="flex items-center">
                   <img
                     src="https://flagcdn.com/w20/qa.png"
-                    alt="Qatar Flag"
+                    alt={dictionary["qatarFlag"]}
                     className="w-5 h-3 mr-2"
                   />
                   <span className="text-gray-700 font-medium">+974</span>
                 </div>
-                {/* Mobile Number Input */}
                 <input
                   type="tel"
                   id="mobile-no"
                   value={mobileNo}
                   onChange={(e) => setMobileNo(e.target.value)}
                   className="flex-grow px-2 py-2 text-base font-medium text-gray-700 focus:outline-none"
-                  placeholder="Enter mobile number"
+                  placeholder={dictionary["enterMobileNumber"]}
                 />
               </div>
             </div>
 
-            {/* Address Label */}
             <h2 className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
-              Address Label
+              {dictionary["addressLabel"]}
             </h2>
             <AddressLabelComponent
               selectedLabel={selectedLabel}
@@ -354,22 +341,22 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
             />
           </div>
 
-          {/* Error Message */}
           {errorMessage && (
             <p className="mt-4 text-red-500 text-sm text-center">
               {errorMessage}
             </p>
           )}
 
-          {/* Submit Button */}
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || isLoading}
-            className={`mt-8 w-full h-10 mx-auto flex items-center justify-center bg-primary text-white font-semibold max-w-[250px]  hover:bg-primary focus:outline-none focus:ring-2  focus:ring-opacity-50 self-center ${
+            className={`mt-8 w-full h-10 mx-auto flex items-center justify-center bg-primary text-white font-semibold max-w-[250px] hover:bg-primary focus:outline-none focus:ring-2 focus:ring-opacity-50 self-center ${
               isSubmitting || isLoading ? "bg-slate-300 cursor-not-allowed" : ""
-            } `}
+            }`}
           >
-            {isSubmitting || isLoading ? "Adding Address..." : "Add Address"}
+            {isSubmitting || isLoading
+              ? dictionary["addingAddress"]
+              : dictionary["add_new_address"]}
           </button>
         </Dialog.Panel>
       </div>
