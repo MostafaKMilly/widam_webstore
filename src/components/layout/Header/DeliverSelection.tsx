@@ -1,17 +1,23 @@
+// components/DeliverSelection.tsx
 "use client";
-import LocationSelection from "@/components/LocationSelection/LocationSelection";
-import { getUser } from "@/lib/api/profile";
-import { useDictionary } from "@/lib/hooks/useDictionary";
-import { useQuery } from "@tanstack/react-query";
+
 import React, { useEffect, useState } from "react";
+// import { useQuery } from "@tanstack/react-query";
+// import { getUser } from "@/lib/api/profile";
+// import { getAddresses } from "@/lib/api/addresses";
+import { useDictionary } from "@/lib/hooks/useDictionary";
+import LocationSelection from "@/components/LocationSelection/LocationSelection";
+import { Plus } from "lucide-react";
+import AddressSelectionDialog from "@/components/cart/AddressSelectionDialog";
+import useUserStore from "@/lib/store/userStore";
 
 const DeliverSelection: React.FC = () => {
   const [isLocationSelectionOpen, setIsLocationSelectionOpen] = useState(false);
+  const [isAddressSelectionOpen, setIsAddressSelectionOpen] = useState(false);
   const { dictionary } = useDictionary();
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["profile"],
-    queryFn: () => getUser(),
-  });
+  const [mounted, setMounted] = useState(false);
+
+  const user = useUserStore((state) => state.user);
 
   const handleOpenLocationSelection = () => {
     setIsLocationSelectionOpen(true);
@@ -21,23 +27,46 @@ const DeliverSelection: React.FC = () => {
     setIsLocationSelectionOpen(false);
   };
 
+  const handleOpenAddressSelection = () => {
+    setIsAddressSelectionOpen(true);
+  };
+
+  const handleCloseAddressSelection = () => {
+    setIsAddressSelectionOpen(false);
+  };
+
   useEffect(() => {
     const hasOpened = localStorage.getItem("hasOpenedDialog");
-    if (!hasOpened) {
-      setIsLocationSelectionOpen(true);
+    if (!hasOpened && user?.preferred_shipping_address) {
+      setIsAddressSelectionOpen(true);
+      localStorage.setItem("hasOpenedDialog", "true");
     }
+  }, [user]);
+
+  const displayLocation = () => {
+    return user?.preferred_shipping_address?.address_title || "Doha";
+  };
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   return (
     <div>
       <div
         className="flex items-center gap-2.5 cursor-pointer"
-        onClick={handleOpenLocationSelection}
+        onClick={() => {
+          if (user?.preferred_shipping_address) {
+            handleOpenAddressSelection();
+          } else {
+            handleOpenLocationSelection();
+          }
+        }}
       >
         <img
           loading="lazy"
           src="https://cdn.builder.io/api/v1/image/assets/TEMP/549e2d02a24238a076781bc3e6b93c72c473806eae1a3aef02a356e8589eb3ab?apiKey=9810db3822b54ab583e896edd833d595&&apiKey=9810db3822b54ab583e896edd833d595"
-          alt=""
+          alt="Delivery Icon"
           className="object-contain shrink-0 self-start aspect-[0.86] w-[30px]"
         />
         <div>
@@ -45,13 +74,28 @@ const DeliverSelection: React.FC = () => {
             {dictionary.deliver_to}
           </span>
           <br />
-          Al Sadd, Qatar
+
+          <span className="font-semibold">
+            {mounted ? displayLocation() : ""}
+          </span>
         </div>
       </div>
-      <LocationSelection
-        isOpen={isLocationSelectionOpen}
-        onClose={handleCloseLocationSelection}
-      />
+
+      {/* AddressSelectionDialog for Authenticated Users */}
+      {user?.preferred_shipping_address && mounted && (
+        <AddressSelectionDialog
+          isOpen={isAddressSelectionOpen}
+          onClose={handleCloseAddressSelection}
+        />
+      )}
+
+      {/* LocationSelection Dialog for Unauthenticated Users or No Preferred Address */}
+      {!user?.preferred_shipping_address && mounted && (
+        <LocationSelection
+          isOpen={isLocationSelectionOpen}
+          onClose={handleCloseLocationSelection}
+        />
+      )}
     </div>
   );
 };

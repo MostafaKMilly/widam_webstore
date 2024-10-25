@@ -1,101 +1,141 @@
-// /components/cart/CartItem.tsx
 "use client";
 
 import React from "react";
 import Image from "next/image";
-import { PlusIcon, MinusIcon, TrashIcon } from "lucide-react"; // Updated Lucide Icons
+import { PlusIcon, MinusIcon, TrashIcon, Minus, Plus } from "lucide-react";
 import useCartStore from "@/lib/store/cartStore";
-import { motion, AnimatePresence } from "framer-motion";
-import { useDictionary } from "@/lib/hooks/useDictionary";
+import { WebsiteItem } from "@/lib/queries/getWebsiteItem";
 
 interface CartItemProps {
-  item: {
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-    image: string;
-  };
+  item: WebsiteItem;
 }
 
-const CartItem: React.FC<CartItemProps> = ({ item }) => {
-  const { dictionary } = useDictionary(); // Localization
+const CartItemComponent: React.FC<CartItemProps> = ({ item }) => {
   const addItem = useCartStore((state) => state.addItem);
   const decrementItem = useCartStore((state) => state.decrementItem);
   const removeItem = useCartStore((state) => state.removeItem);
+  const setItemQuantity = useCartStore((state) => state.setItemQuantity);
 
-  const handleIncrement = () => {
-    addItem({ ...item, quantity: 1 });
+  const handleIncrement = async () => {
+    await addItem(item, 1);
   };
 
-  const handleDecrement = () => {
-    if (item.quantity === 1) {
-      removeItem(item.id);
+  const handleDecrement = async () => {
+    if ((item.qty_in_cart || 0) > 1) {
+      await decrementItem(item.website_item_id);
     } else {
-      decrementItem(item.id);
+      await removeItem(item.website_item_id);
     }
   };
 
+  const handleQuantityChange = async (quantity: number) => {
+    await setItemQuantity(item.website_item_id, quantity);
+  };
+
+  const hasDiscount =
+    item.price.discounted_price > 0 &&
+    item.price.discounted_price < item.price.website_item_price;
+
+  const discountPercentage = hasDiscount
+    ? (
+        ((item.price.website_item_price - item.price.discounted_price) /
+          item.price.website_item_price) *
+        100
+      ).toFixed(0)
+    : null;
+
+  const isOutOfStock = item.in_stock === 0;
+
   return (
-    <div className="flex items-center p-4 hover:bg-gray-50 transition-colors rounded-lg shadow-sm">
-      {/* Product Image */}
-      <div className="w-24 h-24 relative flex-shrink-0">
-        <Image
-          src={item.image}
-          alt={item.name}
-          layout="fill"
-          objectFit="cover"
-          className="rounded-md"
-        />
-      </div>
-
-      {/* Product Details */}
-      <div className="flex-1 ml-6">
-        <h2 className="text-lg font-semibold text-gray-800">{item.name}</h2>
-        <p className="text-gray-600 mt-1">
-          {dictionary.price || "Price"}: QAR {item.price.toFixed(2)}
-        </p>
-      </div>
-
-      {/* Quantity Controls */}
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center gap-x-3 bg-[#F6F6F6] rounded-s-full rounded-e-full">
-          {/* Decrement Button */}
-          <button
-            onClick={handleDecrement}
-            className="flex items-center justify-center w-10 h-10 border border-red-500 text-red-500 rounded-full hover:border-red-600 transition-colors"
-            aria-label={dictionary.decrement || "Decrease quantity"}
-          >
-            <MinusIcon className="w-5 h-5" />
-          </button>
-
-          {/* Quantity Display */}
-          <span className="mx-2 text-lg font-medium text-gray-800">
-            {item.quantity}
-          </span>
-
-          {/* Increment Button */}
-          <button
-            onClick={handleIncrement}
-            className="flex items-center justify-center w-10 h-10 bg-[#04ADEB] text-white rounded-full transition-colors"
-            aria-label={dictionary.increment || "Increase quantity"}
-          >
-            <PlusIcon className="w-5 h-5" />
-          </button>
+    <div className="flex bg-white rounded-md  p-4  items-center relative">
+      <div className="relative w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
+        {item.website_item_image ? (
+          <Image
+            src={item.website_item_image}
+            alt={item.website_item_name}
+            layout="fill"
+            objectFit="contain"
+            className="object-contain"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-200"></div>
+        )}
+        {hasDiscount && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-sm font-semibold px-2 py-1 rounded-md">
+            {discountPercentage}% OFF
+          </div>
+        )}
+        <div className="absolute top-1 right-1 flex flex-col flex-wrap ">
+          {item.tags &&
+            item.tags.map((tag) => (
+              <div
+                key={tag.id}
+                className="flex items-center gap-1 bg-gray-200 text-sm px-1 py-1 rounded-md"
+              >
+                {tag.icon && (
+                  <Image
+                    src={tag.icon}
+                    alt={tag.title}
+                    width={16}
+                    height={16}
+                  />
+                )}
+                {tag.product_label === 1 && (
+                  <span className="text-gray-700">{tag.title}</span>
+                )}
+              </div>
+            ))}
         </div>
-
-        {/* Remove Button */}
+      </div>
+      <div className="flex-grow ml-4">
+        <h3 className="text-lg font-medium text-neutral-800">
+          {item.website_item_name}
+        </h3>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-2xl font-bold">
+            {hasDiscount
+              ? item.price.discounted_price.toFixed(2)
+              : item.price.website_item_price?.toFixed(2)}
+          </span>
+          <span>QAR</span>
+          {hasDiscount && (
+            <span className="text-lg line-through text-gray-400">
+              {item.price.website_item_price?.toFixed(2)} QAR
+            </span>
+          )}
+        </div>
+        {/* Display stock_uom */}
+        <p className="text-sm text-[#888]">{item.stock_uom}</p>
+        {item.is_express_item === 1 && (
+          <Image
+            src="/icons/express.svg"
+            width={118.864}
+            height={29.204}
+            alt="expressItem"
+          />
+        )}
+      </div>
+      <div className="flex items-center justify-between w-[170px] min-w-[180px] mt-4 bg-[#f6f6f6] rounded-[48px]">
         <button
-          onClick={() => removeItem(item.id)}
-          className="p-2  text-gray-500 rounded-full  transition-colors"
-          aria-label={dictionary.remove || "Remove item"}
+          onClick={handleDecrement}
+          className="w-[48px] h-[48px] border bg-[#f6f6f6] border-[#EB5757] text-[#EB5757] flex justify-center items-center rounded-full"
         >
-          <TrashIcon className="w-5 h-5" />
+          {(item.qty_in_cart || 0) > 1 ? (
+            <Minus className="w-6 h-6 text-[#EB5757]" />
+          ) : (
+            <TrashIcon className="w-6 h-6 text-[#EB5757]" />
+          )}
+        </button>
+        <span className="text-xl font-semibold">{item.qty_in_cart}</span>
+        <button
+          onClick={handleIncrement}
+          className="w-[48px] h-[48px] bg-[#EB5757] flex justify-center items-center rounded-full"
+        >
+          <Plus className="text-white w-6 h-6" />
         </button>
       </div>
     </div>
   );
 };
 
-export default CartItem;
-``;
+export default CartItemComponent;

@@ -99,6 +99,7 @@ export type WebsiteItem = {
       in_stock: number;
     }>;
   }>;
+  qty_in_cart?: number;
 };
 
 export default getWebsiteItem;

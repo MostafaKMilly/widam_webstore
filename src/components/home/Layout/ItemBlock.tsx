@@ -1,15 +1,16 @@
-// ItemBlock.tsx
+// /components/ItemBlock.tsx
 "use client";
+
 import React, { useState } from "react";
 import Image from "next/image";
 import { PlusIcon, Settings2, TrashIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import useCartStore from "@/lib/store/cartStore";
 import { motion, AnimatePresence } from "framer-motion";
-import AddNumberDialog from "@/components/RegisterDialogs/AddNumberDialog"; // Import the dialog
+import AddNumberDialog from "@/components/RegisterDialogs/AddNumberDialog";
 import useUserStore from "@/lib/store/userStore";
 import { useDictionary } from "@/lib/hooks/useDictionary";
+import toast from "react-hot-toast";
 
 interface ItemBlockProps {
   block: {
@@ -56,7 +57,6 @@ interface ItemBlockProps {
 
 const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
   const [counter, setCounter] = useState<{ [key: string]: number }>({});
-  const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const decrementItem = useCartStore((state) => state.decrementItem);
   const user = useUserStore((state) => state.user);
@@ -68,22 +68,26 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleIncrement = (item: any) => {
+  const handleIncrement = async (item: any) => {
     setCounter((prev) => ({
       ...prev,
       [item.website_item_id]: (prev[item.website_item_id] || 0) + 1,
     }));
 
-    addItem({
-      id: item.website_item_id,
-      name: item.website_item_name,
-      quantity: 1,
-      price: item.price?.discounted_price || item.price.website_item_price,
-      image: item.website_item_image,
-    });
+    if (!user) {
+      setIsDialogOpen(true);
+      return;
+    }
+
+    try {
+      await addItem(item, 1);
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+      toast.error("Failed to add item to cart.");
+    }
   };
 
-  const handleDecrement = (item: any) => {
+  const handleDecrement = async (item: any) => {
     setCounter((prev) => ({
       ...prev,
       [item.website_item_id]: Math.max(
@@ -92,7 +96,17 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
       ),
     }));
 
-    decrementItem(item.website_item_id);
+    if (!user) {
+      setIsDialogOpen(true);
+      return;
+    }
+
+    try {
+      await decrementItem(item.website_item_id);
+    } catch (error) {
+      console.error("Error decrementing item:", error);
+      toast.error("Failed to update cart.");
+    }
   };
 
   const openDialog = () => setIsDialogOpen(true);
@@ -122,14 +136,20 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
               ).toFixed(0)
             : null;
 
-          return (
-            <Link
-              href={`/products/${item.website_item_id}`}
-              key={item.website_item_id}
-              className={`flex flex-col bg-white rounded-md shadow-sm p-4 border border-[#d1d5db] transition-all hover:shadow-lg relative`}
-            >
-              <div className="flex flex-col pb-8">
-                <div className="relative w-full aspect-square bg-gray-100 h-[280px] rounded-md overflow-hidden">
+          const isOutOfStock = item.in_stock === 0;
+
+          const isSelected =
+            user?.preferred_shipping_address &&
+            user.preferred_shipping_address.address_id === item.website_item_id;
+
+          const itemContent = (
+            <div className="flex flex-col bg-white rounded-md shadow-sm p-4 border border-[#d1d5db] transition-all relative h-full">
+              <div className="flex flex-col pb-8 flex-grow">
+                <div
+                  className={`relative w-full aspect-square bg-gray-100 h-[280px] rounded-md overflow-hidden ${
+                    isOutOfStock ? "opacity-50" : "opacity-100"
+                  }`}
+                >
                   <Image
                     src={item.website_item_image}
                     alt={item.website_item_name}
@@ -143,7 +163,7 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
                     </div>
                   )}
 
-                  <div className="absolute top-1 right-1 flex  flex-col flex-wrap ">
+                  <div className="absolute top-1 right-1 flex flex-col flex-wrap ">
                     {item.tags.map((tag) => (
                       <div
                         key={tag.id}
@@ -192,70 +212,103 @@ const ItemBlock: React.FC<ItemBlockProps> = ({ block }) => {
                 {!item.in_stock && (
                   <p className="text-red-500 text-sm mt-2">Out of Stock</p>
                 )}
+              </div>
 
-                {item.website_item_type !== "V" && (
-                  <AnimatePresence>
-                    {counter[item.website_item_id] > 0 ? (
-                      <motion.div
-                        key="counter"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="flex items-center justify-between w-[170px] min-w-[180px] mt-1  bg-[#f6f6f6] rounded-[48px] absolute bottom-3 ltr:right-3 rtl:left-3"
+              {/* Add Buttons for Non-Variant Items */}
+              {item.website_item_type !== "V" && (
+                <AnimatePresence>
+                  {counter[item.website_item_id] > 0 ? (
+                    <motion.div
+                      key="counter"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="flex items-center justify-between w-[170px] min-w-[180px] mt-1 bg-[#f6f6f6] rounded-[48px] absolute bottom-3 ltr:right-3 rtl:left-3"
+                      style={{
+                        visibility: isOutOfStock ? "hidden" : "visible",
+                      }}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDecrement(item);
+                        }}
+                        className={`w-[48px] h-[48px] border bg-[#f6f6f6] border-[#EB5757] text-[#EB5757] flex justify-center items-center rounded-full`}
+                        disabled={isOutOfStock}
                       >
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleDecrement(item);
-                          }}
-                          className={`w-[48px] h-[48px] border bg-[#f6f6f6] border-[#EB5757] text-[#EB5757] flex justify-center items-center rounded-full`}
-                        >
-                          <TrashIcon className="w-6 h-6 text-[#EB5757]" />
-                        </button>
-                        <span className="text-xl font-semibold">
-                          {counter[item.website_item_id]}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleIncrement(item);
-                          }}
-                          className="w-[48px] h-[48px] bg-[#EB5757] flex justify-center items-center rounded-full"
-                        >
-                          <PlusIcon className="text-white w-6 h-6" />
-                        </button>
-                      </motion.div>
-                    ) : (
-                      <motion.button
-                        key="plusButton"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
+                        <TrashIcon className="w-6 h-6 text-[#EB5757]" />
+                      </button>
+                      <span className="text-xl font-semibold">
+                        {counter[item.website_item_id]}
+                      </span>
+                      <button
                         onClick={(e) => {
                           e.preventDefault();
                           handleIncrement(item);
                         }}
-                        className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 ltr:right-3 rtl:left-3"
+                        className="w-[48px] h-[48px] bg-[#EB5757] flex justify-center items-center rounded-full"
+                        disabled={isOutOfStock}
                       >
-                        <PlusIcon className="text-white w-8 h-8 my-auto mx-auto" />
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                )}
-                {item.website_item_type === "V" && (
-                  <button
-                    className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 ltr:right-3 rtl:left-3"
-                    onClick={(e) => {
-                      if (!user) {
-                        e.stopPropagation();
-                        openDialog();
-                      }
-                    }}
-                  >
-                    <Settings2 className="text-white w-6 h-6" />
-                  </button>
-                )}
-              </div>
+                        <PlusIcon className="text-white w-6 h-6" />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.button
+                      key="plusButton"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleIncrement(item);
+                      }}
+                      className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 ltr:right-3 rtl:left-3"
+                      style={{
+                        visibility: isOutOfStock ? "hidden" : "visible",
+                      }}
+                      disabled={isOutOfStock}
+                    >
+                      <PlusIcon className="text-white w-8 h-8 my-auto mx-auto" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              )}
+
+              {/* Add Button for Variant Items */}
+              {item.website_item_type === "V" && (
+                <button
+                  className="ml-auto mt-1 w-[48px] h-[48px] bg-[#03ADEB] flex justify-center items-center rounded-full absolute bottom-3 ltr:right-3 rtl:left-3"
+                  onClick={(e) => {
+                    if (!user) {
+                      e.stopPropagation();
+                      setIsDialogOpen(true);
+                    }
+                  }}
+                  style={{
+                    visibility: isOutOfStock ? "hidden" : "visible",
+                  }}
+                  disabled={isOutOfStock}
+                >
+                  <Settings2 className="text-white w-6 h-6" />
+                </button>
+              )}
+            </div>
+          );
+
+          return isOutOfStock ? (
+            <div
+              key={item.website_item_id}
+              className={`cursor-not-allowed opacity-50 flex flex-col`}
+            >
+              {itemContent}
+            </div>
+          ) : (
+            <Link
+              href={`/products/${item.website_item_id}`}
+              key={item.website_item_id}
+              className="flex flex-col h-full"
+            >
+              {itemContent}
             </Link>
           );
         })}

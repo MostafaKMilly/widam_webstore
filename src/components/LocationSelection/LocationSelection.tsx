@@ -30,7 +30,6 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  console.log(map);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(
     null

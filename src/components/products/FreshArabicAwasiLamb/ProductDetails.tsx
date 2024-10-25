@@ -1,3 +1,4 @@
+// /components/ProductDetails.tsx
 "use client";
 import React, { useState } from "react";
 import CuttingOption from "./CuttingOption";
@@ -12,6 +13,9 @@ import {
   NutritionFacts,
   nutritionFactsMapping,
 } from "@/lib/helpers/nutrationFacts";
+import useUserStore from "@/lib/store/userStore";
+import { useRouter } from "next/navigation";
+import AddNumberDialog from "@/components/RegisterDialogs/AddNumberDialog";
 
 const ProductDetails = ({
   websiteItem,
@@ -19,7 +23,9 @@ const ProductDetails = ({
   websiteItem: WebsiteItem | undefined;
 }) => {
   const { dictionary } = useDictionary(); // Access translations
-  console.log(websiteItem);
+  const router = useRouter();
+  const user = useUserStore((state) => state.user);
+  const addItem = useCartStore((state) => state.addItem);
 
   // Static locations for now
   const locations = [{ name: "Al Wakra" }, { name: "Al Sailiya" }];
@@ -34,9 +40,7 @@ const ProductDetails = ({
   const [qid, setQid] = useState<string>("");
   const [qidFile, setQidFile] = useState<File | null>(null);
   const [quantity, setQuantity] = useState<number>(websiteItem?.min_qty || 1);
-
-  // Zustand Store
-  const addItem = useCartStore((state) => state.addItem);
+  const [isAddNumberOpen, setIsAddNumberOpen] = useState(false);
 
   // Handler for selecting attribute variants
   const handleAttributeSelect = (attributeId: string, valueId: string) => {
@@ -78,7 +82,7 @@ const ProductDetails = ({
   };
 
   // Handler for Add to Cart
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     // Ensure required selections are made
     const requiredAttributes = websiteItem?.attribute_variants || [];
     for (let attr of requiredAttributes) {
@@ -108,39 +112,35 @@ const ProductDetails = ({
       return;
     }
 
-    // Construct a unique ID for the cart item (e.g., website_item_id + selected variants)
-    const variantIds = Object.values(selectedAttributes).join("-");
-    const cartItemId = `${websiteItem?.website_item_id}-${variantIds}`;
-
-    // Find the selected variant to get specific details (like image)
-    // For simplicity, assume one attribute with variants
-    let selectedVariant = null;
-    if (
-      websiteItem?.attribute_variants &&
-      websiteItem.attribute_variants.length > 0
-    ) {
-      const attribute = websiteItem.attribute_variants[0];
-      selectedVariant = attribute.attribute_value.find(
-        (val) => val.value_id === selectedAttributes[attribute.attribute_id]
-      );
+    if (!user) {
+      setIsAddNumberOpen(true);
+      return;
     }
 
-    const itemToAdd = {
-      id: cartItemId,
-      name: websiteItem?.website_item_name!,
-      quantity: quantity,
-      price: websiteItem?.price.website_item_price!,
-      image: selectedVariant
-        ? selectedVariant.icon
-        : websiteItem?.website_item_image!,
-      attributes: selectedAttributes,
-      location: selectedLocation,
-      qid: qid,
-      qidFile: qidFile,
-    };
+    try {
+      // Construct a unique ID for the cart item (e.g., website_item_id + selected variants)
+      const variantIds = Object.values(selectedAttributes).join("-");
+      const cartItemId = `${websiteItem?.website_item_id}-${variantIds}`;
 
-    addItem(itemToAdd);
-    toast.success(dictionary.itemAddedToCart || "Item added to cart!");
+      // Find the selected variant to get specific details (like image)
+      // For simplicity, assume one attribute with variants
+      let selectedVariant = null;
+      if (
+        websiteItem?.attribute_variants &&
+        websiteItem.attribute_variants.length > 0
+      ) {
+        const attribute = websiteItem.attribute_variants[0];
+        selectedVariant = attribute.attribute_value.find(
+          (val) => val.value_id === selectedAttributes[attribute.attribute_id]
+        );
+      }
+
+      await addItem(websiteItem!, 1);
+      toast.success(dictionary.itemAddedToCart || "Item added to cart!");
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+      toast.error("Failed to add item to cart.");
+    }
   };
 
   if (!websiteItem) {
@@ -454,6 +454,12 @@ const ProductDetails = ({
           </div>
         </div>
       )}
+
+      {/* Registration/Login Dialog */}
+      <AddNumberDialog
+        isOpen={isAddNumberOpen}
+        onClose={() => setIsAddNumberOpen(false)}
+      />
     </div>
   );
 };

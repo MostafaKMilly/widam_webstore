@@ -1,19 +1,33 @@
-// DefaultAddress.tsx
+// components/DefaultAddress.tsx
 "use client";
 
-import React, { useEffect, useRef, useState, Fragment } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  Fragment,
+  CSSProperties,
+} from "react";
 import { Address } from "@/lib/api/addresses";
-import { Trash2, Edit2 } from "lucide-react"; // Importing Trash and Edit icons
-import { Dialog, Transition } from "@headlessui/react"; // Import Headless UI components
+import { Trash2 } from "lucide-react"; // Removed CheckCircle import
+import { Dialog, Transition } from "@headlessui/react";
 
 interface DefaultAddressProps {
   address: Address;
-  onDelete?: () => void; // Add onDelete prop
+  isSelected?: boolean; // Optional
+  onSelect?: (address: Address) => void; // Optional
+  onDelete?: () => void; // Optional
+  className?: string;
+  styles?: CSSProperties;
 }
 
 const DefaultAddress: React.FC<DefaultAddressProps> = ({
   address,
+  isSelected = false,
+  onSelect,
   onDelete,
+  className,
+  styles,
 }) => {
   const { latitude, longitude } = address || {};
   const mapRef = useRef<HTMLDivElement>(null);
@@ -34,6 +48,12 @@ const DefaultAddress: React.FC<DefaultAddressProps> = ({
         disableDefaultUI: true,
       });
 
+      // Add a marker to the map
+      new google.maps.Marker({
+        position: { lat: latitude, lng: longitude },
+        map: googleMap,
+      });
+
       setMap(googleMap);
     }
   };
@@ -46,10 +66,22 @@ const DefaultAddress: React.FC<DefaultAddressProps> = ({
 
   return (
     <div
-      className="px-3.5 py-4 mt-3.5 rounded-sm border border-solid border-zinc-100 shadow-sm max-md:pr-5 max-md:max-w-full"
+      className={`px-3.5 py-4 mt-3.5 rounded-sm border ${
+        isSelected ? "border-blue-500 bg-blue-50" : "border-zinc-100"
+      } shadow-sm max-md:pr-5 max-md:max-w-full ${
+        onSelect ? "cursor-pointer hover:bg-blue-50" : ""
+      } ${className}`}
+      onClick={() => {
+        if (onSelect) {
+          onSelect(address);
+        }
+      }}
       style={{
-        border: "1px solid #ECECEC",
-        boxShadow: "2px 2px 2.5px 0px rgba(0, 0, 0, 0.16)",
+        border: isSelected ? "1px solid #05B" : "1px solid #ECECEC",
+        boxShadow: isSelected
+          ? "none"
+          : "2px 2px 2.5px 0px rgba(0, 0, 0, 0.16)",
+        ...styles,
       }}
     >
       <div className="flex justify-between gap-5 max-md:flex-col">
@@ -88,9 +120,13 @@ const DefaultAddress: React.FC<DefaultAddressProps> = ({
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {/* Removed CheckCircle Icon */}
           {onDelete && (
             <button
-              onClick={() => setIsDialogOpen(true)}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering onSelect
+                setIsDialogOpen(true);
+              }}
               className="text-red-500 hover:text-red-700"
               aria-label="Delete Address"
             >

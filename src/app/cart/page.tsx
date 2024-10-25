@@ -1,164 +1,328 @@
-// components/cart/CartPage.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  getQuotationDetails,
+  updateQuotation,
+  QuotationIdResponse,
+  Qutation,
+} from "@/lib/api/cart";
 import useCartStore from "@/lib/store/cartStore";
-import { Dialog, Transition } from "@headlessui/react";
-import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast";
-import { ShoppingCart, AlertCircle } from "lucide-react"; // Importing Lucide Icons
+import useUserStore from "@/lib/store/userStore";
+import CartItemComponent from "@/components/cart/CartItem";
+import getUtils from "@/lib/queries/getUtils";
 import { useDictionary } from "@/lib/hooks/useDictionary";
-import CartItem from "@/components/cart/cartItem";
+import PaymentMethods from "@/components/layout/Footer/PaymentMethods";
+import toast from "react-hot-toast";
 import AddressSelectionDialog from "@/components/cart/AddressSelectionDialog";
+import { useRouter } from "next/navigation";
 
-const CartPage: React.FC = () => {
-  const { dictionary } = useDictionary(); // Localization
-  const cartItems = useCartStore((state) => state.items);
-  const totalPrice = useCartStore((state) => state.getTotalPrice());
-  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const router = useRouter();
+interface Coupon {
+  title: string;
+  description: string;
+  code: string;
+}
 
-  const openAddressDialog = () => setIsAddressDialogOpen(true);
-  const closeAddressDialog = () => setIsAddressDialogOpen(false);
+const Coupons: React.FC = () => {
+  const [couponCode, setCouponCode] = useState("");
+  const [couponData, setCouponData] = useState<Coupon[]>([
+    {
+      title: "Get 30% off on your first order!",
+      description: "Order now to avail the discount",
+      code: "WIDAM-2022",
+    },
+    {
+      title: "Get 30% off on your first order!",
+      description: "Order now to avail the discount",
+      code: "WIDAM-2022",
+    },
+  ]);
 
-  const handleContinue = () => {
-    if (cartItems.length === 0) {
-      toast.error(dictionary.cartEmpty || "Your cart is empty!");
-      return;
-    }
-    openAddressDialog();
+  const handleApplyCoupon = (code: string) => {
+    console.log(`Applying coupon: ${code}`);
+
+    toast(`Coupon ${code} applied!`);
   };
 
-  const handlePlaceOrder = async (address: any) => {
-    setIsPlacingOrder(true);
-    try {
-      // Prepare the order data
-      const quotationIdResponse = await fetch("/api/cart/getQuotationId", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          // Populate with necessary data
-          split: "example_split",
-          pickup: address.address, // Example
-          website_items: JSON.stringify(cartItems),
-          qid_field_placeholder: "placeholder",
-        }),
-      });
-
-      if (!quotationIdResponse.ok) {
-        throw new Error(
-          dictionary.orderPlacementFailed || "Failed to get quotation ID"
-        );
-      }
-
-      const quotationData = await quotationIdResponse.json();
-
-      if (quotationData.status_code !== 200) {
-        throw new Error(
-          quotationData.message || "Quotation ID retrieval failed"
-        );
-      }
-
-      const quotationId = quotationData.data.quotation_id;
-
-      // Place the order
-      const placeOrderResponse = await fetch("/api/cart/placeOrder", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          quotation_id: quotationId,
-          payment_method: "credit_card", // Example
-          _lang: "en",
-        }),
-      });
-
-      if (!placeOrderResponse.ok) {
-        throw new Error(
-          dictionary.orderPlacementFailed || "Failed to place order"
-        );
-      }
-
-      const orderData = await placeOrderResponse.json();
-
-      if (orderData.status_code !== 200) {
-        throw new Error(orderData.message || "Order placement failed");
-      }
-
-      toast.success(
-        dictionary.orderPlacedSuccessfully || "Order placed successfully!"
-      );
-      useCartStore.getState().clearCart();
-      router.push(`/order/${orderData.data.order_id}`);
-    } catch (error: any) {
-      console.error("Error placing order:", error);
-      toast.error(
-        error.message ||
-          dictionary.orderPlacementError ||
-          "An error occurred while placing the order."
-      );
-    } finally {
-      setIsPlacingOrder(false);
-      closeAddressDialog();
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleApplyCoupon(couponCode);
+    setCouponCode("");
   };
 
   return (
-    <div className="container mx-auto p-6 mt-6">
-      <div className="flex items-center mb-6">
-        <ShoppingCart className="w-8 h-8 text-blue-600" />
-        <h1 className="text-3xl font-bold ml-2">
-          {dictionary.yourCart || "Your Cart"}
-        </h1>
-      </div>
-      {cartItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64">
-          <AlertCircle className="w-16 h-16 text-gray-400" />
-          <p className="text-xl text-gray-500 mt-4">
-            {dictionary.cartEmpty || "Your cart is empty."}
-          </p>
+    <div className="bg-gray-100 p-6 rounded shadow mb-6 bg-[#F6F6F6]">
+      <form onSubmit={handleSubmit}>
+        <div className="flex items-center bg-white rounded-sm border border-stone-300 px-3.5 py-3">
+          <input
+            type="text"
+            id="couponInput"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value)}
+            className="flex-grow border-none outline-none text-gray-700"
+            placeholder="ENTER COUPON CODE"
+            aria-label="Enter coupon code"
+          />
+          <button type="submit" className="font-bold text-blue-500 ml-2">
+            APPLY
+          </button>
         </div>
-      ) : (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="divide-y">
-            {cartItems.map((item) => (
-              <CartItem key={item.id} item={item} />
-            ))}
-          </div>
-          <div className="p-6 flex justify-between items-center bg-gray-50">
-            <span className="text-2xl font-semibold">
-              {dictionary.total || "Total"}: {`QAR ${totalPrice.toFixed(2)}`}
-            </span>
+      </form>
+
+      {couponData.map((coupon, index) => (
+        <article
+          key={index}
+          className="flex flex-col px-3.5 pt-5 pb-px mt-6 w-full text-black bg-white rounded-sm border-solid shadow-sm border-[0.5px] border-zinc-100"
+        >
+          <h2 className="self-start font-bold">
+            <span className="capitalize">Get</span> {coupon.title}
+          </h2>
+          <p className="self-start mt-3.5 text-base font-medium">
+            {coupon.description}
+          </p>
+          <div className="flex flex-wrap gap-5 justify-between mt-8 text-sky-800 whitespace-nowrap">
+            <div className="px-8 py-3 font-medium rounded-sm border border-blue-500 border-dashed bg-neutral-100">
+              {coupon.code}
+            </div>
             <button
-              onClick={handleContinue}
-              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => handleApplyCoupon(coupon.code)}
+              className="my-auto font-bold"
             >
-              <span className="mr-2">{dictionary.continue || "Continue"}</span>
-              <ShoppingCart className="w-5 h-5" />
+              Apply
             </button>
           </div>
-        </div>
-      )}
+          <hr className="shrink-0 mt-5 max-w-full bg-white border-white w-full" />
+        </article>
+      ))}
+    </div>
+  );
+};
 
-      {/* Address Selection Dialog */}
-      <AddressSelectionDialog
-        isOpen={isAddressDialogOpen}
-        onClose={closeAddressDialog}
-        onSelectAddress={handlePlaceOrder}
-      />
+const CartPage: React.FC = () => {
+  const {
+    items: cartItems,
+    addItem,
+    decrementItem,
+    removeItem,
+    getTotalPrice,
+    loadCart,
+  } = useCartStore();
 
-      {/* Optionally, you can show a loading indicator when placing an order */}
-      {isPlacingOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg">
-            <p className="text-lg">Placing your order...</p>
+  const { dictionary } = useDictionary();
+
+  const { data, isLoading, error, isSuccess } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => getQuotationDetails(),
+    select: (res) =>
+      res?.message === "Cart Empty" ? { data: {} as Partial<Qutation> } : res,
+  });
+
+  const {
+    data: utilsData,
+    isLoading: utilsLoading,
+    error: utilsError,
+  } = useQuery({
+    queryKey: ["utils"],
+    queryFn: () => getUtils(),
+  });
+
+  const subtotal = getTotalPrice();
+
+  useEffect(() => {
+    if (isSuccess && data?.data && data.data.cart_content) {
+      loadCart(data?.data.cart_content.normal_delivery.website_items);
+    }
+  }, [loadCart, isSuccess, data]);
+
+  const dict = dictionary;
+  const dateFormatted = utilsData?.data.delivery_date.date_formatted;
+  let convertedDate = "";
+
+  if (dateFormatted) {
+    const dayOfMonth = dateFormatted.split(",")[1]?.trim().split(" ")[0];
+    if (dayOfMonth) {
+      const currentDay = new Date().getDate();
+      if (parseInt(dayOfMonth) > currentDay) {
+        convertedDate = `TOM ${dayOfMonth}`;
+      } else {
+        convertedDate = `TOD ${dayOfMonth}`;
+      }
+    }
+  }
+
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
+
+  const user = useUserStore((state) => state.user);
+
+  const queryClient = useQueryClient();
+
+  const router = useRouter();
+
+  const updateQuotationMutation = useMutation<
+    QuotationIdResponse | undefined,
+    Error,
+    { shipping_address_id: string }
+  >({
+    mutationFn: (variables) =>
+      updateQuotation({ shipping_address_id: variables.shipping_address_id }),
+    onSuccess: (data) => {
+      console.log("Quotation updated successfully:", data);
+      toast.success("Quotation updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      router.push("/checkout");
+    },
+    onError: (error) => {
+      console.error("Error updating quotation:", error);
+      toast.error("Failed to update quotation. Please try again.");
+    },
+  });
+
+  const handleCheckout = () => {
+    if (!data?.data?.shipping_address_id) {
+      setIsAddressDialogOpen(true);
+    } else {
+      updateQuotationMutation.mutate({
+        shipping_address_id: user?.preferred_shipping_address?.address_id!,
+      });
+    }
+  };
+
+  const handleAddressSelected = (addressId: string) => {
+    updateQuotationMutation.mutate({
+      shipping_address_id: addressId,
+    });
+  };
+
+  if (isLoading || utilsLoading) return <div>Loading...</div>;
+  if (error || utilsError || !data || !utilsData)
+    return <div>Error loading cart data.</div>;
+
+  return (
+    <div className="container mx-auto p-4 mt-6 mb-12">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-2/3">
+          <div className="flex gap-4 text-blue-600 mb-4">
+            <a href="/" className="hover:underline">
+              Home
+            </a>
+            <span>/</span>
+            <span>Cart</span>
+          </div>
+
+          <h2 className="text-3xl font-semibold mt-8 mb-12">
+            Your Cart Details
+          </h2>
+
+          <div className="flex flex-col relative gap-4 bg-[#F4FBFB] p-4 border border-[#BEBEBE] shadow-sm">
+            <div className="w-full h-16 flex items-center justify-between gap-4 mb-6">
+              <div className="text-[#232323] text-[24px] font-semibold">
+                Scheduled Delivery
+              </div>
+
+              <div className="flex gap-4 items-center">
+                <span className="text-[#232323] text-md font-bold tracking-wide">
+                  {dict.earlies_delivery}
+                </span>
+                <img src="/icons/delivery-icon copy.svg" alt="Delivery Icon" />
+                <div className="w-[250px] h-16 bg-[#F7F6FA] rounded-sm border border-[#ECEAF0] flex items-center px-2">
+                  <div className="flex gap-2.5 items-center font-bold leading-5">
+                    <div className="flex w-fit px-1 h-[36.782px] bg-[#F7F6FA] rounded-sm items-center gap-1">
+                      <div className="w-[34px] h-[33px] bg-white rounded-sm p-6 flex items-center justify-center">
+                        <p className="text-[#ef3e42] text-xs text-center">
+                          {convertedDate}
+                        </p>
+                      </div>
+                      <div className="text-[#232323] text-[12px] font-bold">
+                        {utilsData?.data.time_slot.time_formatted}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-red-500 text-white absolute -top-6 px-4 py-2 rounded mb-4">
+              {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+            </div>
+            {cartItems.map((item) => (
+              <CartItemComponent key={item.website_item_id} item={item} />
+            ))}
+
+            <div className="flex justify-between text-xl font-semibold mt-6">
+              <span>Sub Total</span>
+
+              <span className="text-[#888888] font-medium">
+                {subtotal.toFixed(2)} QAR
+              </span>
+            </div>
           </div>
         </div>
-      )}
+
+        <div className="w-full lg:w-1/3">
+          <Coupons />
+
+          <div className="bg-gray-100 p-6 rounded shadow mb-6 bg-[#F8FBFF]">
+            <div className="flex justify-between text-xl font-semibold">
+              <div>
+                <span className="text-[#444444] text-[18px] font-bold  capitalize">
+                  Order Total
+                </span>
+                <span className="text-[#444444] text-[18px] font-medium  capitalize">
+                  {" ( "}
+                </span>
+
+                <span className="text-[#aaaaaa] text-[16px] font-medium  capitalize">
+                  {cartItems.length}{" "}
+                  {cartItems.length === 1 ? " item" : " items"}
+                </span>
+                <span className="text-[#444444] text-[18px] font-medium  capitalize">
+                  {" )"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[#232323] text-[16px] font-bold  capitalize">
+                  {subtotal.toFixed(2)}
+                </span>
+                <span className="text-[#232323] text-[16px] font-bold  capitalize">
+                  {" "}
+                </span>
+                <span className="text-[#232323] text-base font-medium  capitalize">
+                  QAR
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <button
+                onClick={handleCheckout}
+                disabled={updateQuotationMutation.isPending}
+                className={`mx-auto self-center mt-12 w-[280px] text-white py-3 rounded ${
+                  updateQuotationMutation.isPending
+                    ? "bg-slate-400 cursor-not-allowed"
+                    : "bg-[#0050b3]"
+                }`}
+              >
+                {updateQuotationMutation.isPending
+                  ? "Processing..."
+                  : "Checkout"}
+              </button>
+            </div>
+          </div>
+
+          <h3 className="text-xl text-center font-semibold mt-8 mb-4">
+            Available Payment Methods
+          </h3>
+          <div className="flex items-center justify-center gap-4">
+            <PaymentMethods />
+          </div>
+        </div>
+      </div>
+
+      <AddressSelectionDialog
+        isOpen={isAddressDialogOpen}
+        onClose={() => setIsAddressDialogOpen(false)}
+        onAddressSelected={handleAddressSelected}
+      />
     </div>
   );
 };

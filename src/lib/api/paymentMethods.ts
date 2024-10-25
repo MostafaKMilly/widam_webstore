@@ -1,18 +1,27 @@
+// /lib/api/paymentMethods.ts
 "use server";
 
+import { cookies } from "next/headers";
 import { getAuthToken } from "../helpers/getAuthToken";
 
 interface PaymentMethodsResponse {
   status_code: number;
   error: number;
   message: string;
-  data: PaymentMethod[];
+  data: { payment_methods: Array<PaymentMethod> };
 }
 
-interface PaymentMethod {
+export interface PaymentMethod {
   payment_method_id: string;
-  name: string;
-  // Add other payment method fields as needed
+  enabled: number;
+  icon: string;
+  priority: number;
+  title: string;
+  description: string;
+  payment_surcharge: number;
+  processor: string;
+  gateway_settings?: string;
+  payment_type?: string;
 }
 
 const API_BASE_URL = process.env.API_BASE_URL;
@@ -27,14 +36,14 @@ async function getPaymentMethods(
   if (payment_method_id) {
     url.searchParams.append("payment_method_id", payment_method_id);
   }
+  const langauge = cookies().get("langauge")?.value;
 
   const requestOptions: RequestInit = {
     method: "GET",
     headers: {
-      "Accept-Language": "ar",
-      Authorization: `token ${getAuthToken()}`,
+      "Accept-Language": langauge || "en",
+      Authorization: `token ${getTokenFromCookies()}`,
     },
-    redirect: "follow",
   };
 
   try {
@@ -48,4 +57,13 @@ async function getPaymentMethods(
 
 export { getPaymentMethods };
 
-export type { PaymentMethodsResponse, PaymentMethod };
+function getTokenFromCookies(): string {
+  const cookiesStore = cookies();
+  const token = cookiesStore.get("token")?.value;
+  if (!token) {
+    throw new Error("Authentication token not found in cookies.");
+  }
+  return token;
+}
+
+export type { PaymentMethodsResponse };

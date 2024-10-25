@@ -2,6 +2,20 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import useCartStore from "./cartStore";
+import { Address } from "../api/addresses";
+
+type CustomerDetails = {
+  customer_name: string;
+  salutation: string;
+  nationality: string;
+};
+
+type ProfileDetails = {
+  first_name: string;
+  last_name: string;
+  customer_details: CustomerDetails;
+};
 
 type User = {
   token: string;
@@ -9,15 +23,8 @@ type User = {
   user_name: string;
   email: string;
   mobile_no: string;
-  profile_details: {
-    first_name: string;
-    last_name: string;
-    customer_details: {
-      customer_name: string;
-      salutation: string;
-      nationality: string;
-    };
-  };
+  profile_details: ProfileDetails;
+  preferred_shipping_address?: Address | null; // Add preferred_shipping_address
 };
 
 interface UserState {
@@ -33,7 +40,9 @@ const useUserStore = create<UserState>()(
     (set) => ({
       user: null,
       language: "en", // Default language
-      setUser: (user: User) => set({ user }),
+      setUser: async (user: User) => {
+        set({ user });
+      },
       clearUser: () => set({ user: null }),
       setLanguage: (language: string) => set({ language }), // Implement setLanguage
     }),

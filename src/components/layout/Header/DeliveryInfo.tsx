@@ -1,4 +1,4 @@
-"use server"
+"use server";
 import getUtils from "@/lib/queries/getUtils";
 import DeliverSelection from "./DeliverSelection";
 import { getDictionary } from "@/app/dictionaries";
@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 
 const DeliveryInfo: React.FC = async () => {
   const data = await getUtils();
+
   const cookiesStore = cookies();
   const language = cookiesStore.get("language")?.value || "en";
 
@@ -41,7 +42,7 @@ const DeliveryInfo: React.FC = async () => {
             {convertedDate}
           </p>
         </div>
-        <div className="text-[#232323] text-[10px] font-bold font-['Montserrat']">
+        <div className="text-[#232323] text-[10px] font-bold">
           {data?.data.time_slot.time_formatted}
         </div>
       </div>
