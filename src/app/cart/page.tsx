@@ -17,6 +17,8 @@ import PaymentMethods from "@/components/layout/Footer/PaymentMethods";
 import toast from "react-hot-toast";
 import AddressSelectionDialog from "@/components/cart/AddressSelectionDialog";
 import { useRouter } from "next/navigation";
+import { LoadingComponent } from "@/components/layout/LoadingComponent";
+import { ErrorComponent } from "@/components/layout/ErrorComponent";
 
 interface Coupon {
   title: string;
@@ -194,9 +196,9 @@ const CartPage: React.FC = () => {
     });
   };
 
-  if (isLoading || utilsLoading) return <div>Loading...</div>;
-  if (error || utilsError || !data || !utilsData)
-    return <div>Error loading cart data.</div>;
+  if (isLoading || utilsLoading) return <LoadingComponent />;
+  if (error || utilsError)
+    return <ErrorComponent message="Error loading cart data." />;
 
   return (
     <div className="container mx-auto p-4 mt-6 mb-12">

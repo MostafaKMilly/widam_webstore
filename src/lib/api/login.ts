@@ -164,6 +164,11 @@ async function register(
   }
 }
 
+export const signout = () => {
+  const cookiesStore = cookies();
+  cookiesStore.delete("token");
+};
+
 export { sendOtp, verifyOtp, register };
 
 export type {

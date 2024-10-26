@@ -5,6 +5,7 @@ import { XIcon } from "lucide-react";
 import { sendOtp } from "@/lib/queries/authApi";
 import VerifyOtpDialog from "./VerifyOtpDialog";
 import { useDictionary } from "@/lib/hooks/useDictionary";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AddNumberDialogProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
+  const client = useQueryClient();
 
   const handlePhoneNumberChange = (value: string) => {
     setPhoneNumber(value);
@@ -33,6 +36,8 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
       return;
     }
 
+    setIsLoading(true); // Start loading
+
     try {
       const response = await sendOtp({ mobile_no: phoneNumber.trim() });
 
@@ -45,11 +50,17 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
       }
     } catch (error) {
       setErrorMessage(dictionary["otpSendError"]);
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
   const handleVerifySuccess = () => {
     onClose();
+    setIsVerifyDialogOpen(false);
+    client.resetQueries({
+      queryKey: ["profile"],
+    });
   };
 
   const handleClose = () => {
@@ -65,11 +76,14 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
 
         <div className="fixed inset-0 flex items-start top-14 justify-center p-4">
-          <Dialog.Panel className="relative flex flex-col rounded-lg max-w-2xl w-full bg-white p-8 shadow-lg">
+          <Dialog.Panel
+            className={`relative flex flex-col rounded-lg max-w-2xl w-full bg-white p-8 shadow-lg`}
+          >
             <button
               onClick={handleClose}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
               aria-label={dictionary["closeDialog"]}
+              disabled={isLoading} // Disable close button while loading
             >
               <XIcon className="h-6 w-6" />
             </button>
@@ -85,6 +99,7 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
             <PhoneInput
               value={phoneNumber}
               onChange={handlePhoneNumberChange}
+              disabled={isLoading} // Disable input while loading
             />
 
             {errorMessage && (
@@ -93,12 +108,36 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
 
             <button
               onClick={handleConfirm}
-              className={`mt-8 px-6 py-3 bg-primary text-white w-full font-semibold max-w-[250px] hover:bg-primary focus:outline-none focus:ring-2 focus:ring-opacity-50 self-center ${
-                !isPhoneValid ? "opacity-50 cursor-not-allowed" : ""
+              className={`mt-8 px-6 py-3 bg-primary text-white w-full font-semibold max-w-[250px] hover:bg-primary focus:outline-none focus:ring-2 focus:ring-opacity-50 self-center flex items-center justify-center ${
+                !isPhoneValid || isLoading
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
               }`}
-              disabled={!isPhoneValid}
+              disabled={!isPhoneValid || isLoading}
             >
-              {dictionary["confirm"]}
+              {isLoading ? (
+                <svg
+                  className="animate-spin h-5 w-5 mr-3 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+              ) : null}
+              {isLoading ? dictionary["loading"] : dictionary["confirm"]}
             </button>
           </Dialog.Panel>
         </div>

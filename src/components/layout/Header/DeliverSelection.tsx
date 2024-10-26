@@ -10,12 +10,19 @@ import LocationSelection from "@/components/LocationSelection/LocationSelection"
 import { Plus } from "lucide-react";
 import AddressSelectionDialog from "@/components/cart/AddressSelectionDialog";
 import useUserStore from "@/lib/store/userStore";
+import { getUser } from "@/lib/api/profile";
+import { useQuery } from "@tanstack/react-query";
 
 const DeliverSelection: React.FC = () => {
   const [isLocationSelectionOpen, setIsLocationSelectionOpen] = useState(false);
   const [isAddressSelectionOpen, setIsAddressSelectionOpen] = useState(false);
   const { dictionary } = useDictionary();
   const [mounted, setMounted] = useState(false);
+
+  const { isError } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getUser(),
+  });
 
   const user = useUserStore((state) => state.user);
 
@@ -44,7 +51,9 @@ const DeliverSelection: React.FC = () => {
   }, [user]);
 
   const displayLocation = () => {
-    return user?.preferred_shipping_address?.address_title || "Doha";
+    return !isError
+      ? user?.preferred_shipping_address?.address_title || "Doha"
+      : "Doha";
   };
 
   useEffect(() => {
@@ -56,7 +65,7 @@ const DeliverSelection: React.FC = () => {
       <div
         className="flex items-center gap-2.5 cursor-pointer"
         onClick={() => {
-          if (user?.preferred_shipping_address) {
+          if (user) {
             handleOpenAddressSelection();
           } else {
             handleOpenLocationSelection();
@@ -82,7 +91,7 @@ const DeliverSelection: React.FC = () => {
       </div>
 
       {/* AddressSelectionDialog for Authenticated Users */}
-      {user?.preferred_shipping_address && mounted && (
+      {user && mounted && (
         <AddressSelectionDialog
           isOpen={isAddressSelectionOpen}
           onClose={handleCloseAddressSelection}
@@ -90,7 +99,7 @@ const DeliverSelection: React.FC = () => {
       )}
 
       {/* LocationSelection Dialog for Unauthenticated Users or No Preferred Address */}
-      {!user?.preferred_shipping_address && mounted && (
+      {!user && mounted && (
         <LocationSelection
           isOpen={isLocationSelectionOpen}
           onClose={handleCloseLocationSelection}

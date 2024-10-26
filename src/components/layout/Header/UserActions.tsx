@@ -8,12 +8,17 @@ import useCartStore from "@/lib/store/cartStore";
 import useUserStore from "@/lib/store/userStore";
 import AddNumberDialog from "@/components/RegisterDialogs/AddNumberDialog";
 import { useRouter } from "next/navigation";
+import { getUser } from "@/lib/api/profile";
+import { useQuery } from "@tanstack/react-query";
 
 const UserActions: React.FC = () => {
   const cartItemCount = useCartStore((state) => state.getTotalCount());
   const totalPrice = useCartStore((state) => state.getTotalPrice());
   const [loaded, setLoaded] = useState(false);
-  const user = useUserStore((state) => state.user);
+  const { data: user, isError } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getUser(),
+  });
   const [isAddNumberOpen, setIsAddNumberOpen] = useState(false);
   const router = useRouter();
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
@@ -25,7 +30,7 @@ const UserActions: React.FC = () => {
   const handleCartClick = (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>
   ) => {
-    if (!user) {
+    if (!user || isError) {
       e.preventDefault(); // Prevent navigation
       setIsAddNumberOpen(true); // Open registration/login dialog
     }

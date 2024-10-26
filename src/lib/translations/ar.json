@@ -168,5 +168,6 @@
   "remove": "إزالة العنصر",
   "orderPlacementFailed": "فشل في وضع الطلب.",
   "orderPlacementError": "حدث خطأ أثناء وضع الطلب.",
-  "orderPlacedSuccessfully": "تم وضع الطلب بنجاح!"
+  "orderPlacedSuccessfully": "تم وضع الطلب بنجاح!",
+  "signOut" : "تسجيل خروج"
 }

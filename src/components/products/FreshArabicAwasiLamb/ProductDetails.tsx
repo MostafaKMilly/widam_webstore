@@ -95,23 +95,6 @@ const ProductDetails = ({
       }
     }
 
-    if (!selectedLocation) {
-      toast.error(
-        dictionary.selectPickupLocation || "Please select a pickup location."
-      );
-      return;
-    }
-
-    if (qid.trim() === "") {
-      toast.error(dictionary.enterQid || "Please enter your QID.");
-      return;
-    }
-
-    if (!qidFile) {
-      toast.error(dictionary.uploadQid || "Please upload a copy of your QID.");
-      return;
-    }
-
     if (!user) {
       setIsAddNumberOpen(true);
       return;
@@ -372,10 +355,10 @@ const ProductDetails = ({
               {/* Nutrition Facts */}
               {nutritionFacts && (
                 <div className="mt-10">
-                  <div className="text-black text-[35px] font-bold font-['Montserrat']">
+                  <div className="text-black text-[35px] font-bold font-montserrat">
                     {dictionary["Nutrition Facts"] || "Nutrition Facts"}
                   </div>
-                  <div className="w-[602px] h-auto text-[#707070] text-2xl font-['Montserrat'] leading-[35px]">
+                  <div className="w-[602px] h-auto text-[#707070] text-2xl font-montserrat leading-[35px]">
                     <div>
                       <span className="font-semibold">
                         {nutritionFacts.kcal}{" "}
@@ -449,7 +432,7 @@ const ProductDetails = ({
           <div className="text-black text-[35px] font-bold mt-20 max-md:text-2xl">
             {dictionary.Description || "Description"}
           </div>
-          <div className="w-full h-auto text-[#707070] text-2xl font-normal font-['Montserrat'] leading-[30px] max-md:w-full max-md:text-base">
+          <div className="w-full h-auto text-[#707070] text-2xl font-normal font-montserrat leading-[30px] max-md:w-full max-md:text-base">
             {websiteItem.short_description}
           </div>
         </div>

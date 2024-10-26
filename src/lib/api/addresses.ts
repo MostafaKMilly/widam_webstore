@@ -153,8 +153,15 @@ async function addAddress(
     const response = await fetch(url, requestOptions);
     if (!response.ok) {
       const result = await response.json();
-      console.log(result);
-      throw new Error(result.message);
+      const errorMessages = JSON.parse(result._server_messages);
+
+      const error = JSON.parse(errorMessages[0]);
+
+      const formattedMessage = `${error.title}: ${error.message.replace(
+        /(\[object Object\])/g,
+        "unknown"
+      )}`;
+      throw new Error(formattedMessage);
     }
     const result: AddAddressResponse = await response.json();
     return result;

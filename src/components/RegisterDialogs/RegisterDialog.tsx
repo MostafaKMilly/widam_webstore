@@ -4,6 +4,7 @@ import { XIcon } from "lucide-react";
 import { register } from "@/lib/queries/authApi"; // Adjust the import path as needed
 import useUserStore from "@/lib/store/userStore";
 import { useDictionary } from "@/lib/hooks/useDictionary";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 
 interface RegisterDialogProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
   phoneNumber,
 }) => {
   const { dictionary } = useDictionary();
-  const [salutation, setSalutation] = useState<string>("");
+  const [salutation, setSalutation] = useState<string>("Mr");
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -25,7 +26,7 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const setUser = useUserStore((state) => state.setUser);
-
+  const client = useQueryClient();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const isFormValid =
@@ -57,6 +58,9 @@ const RegisterDialog: React.FC<RegisterDialogProps> = ({
       if (response && response.status_code === 201 && response.error === 0) {
         onClose();
         setUser(response.data);
+        client.resetQueries({
+          queryKey: ["profile"],
+        });
       } else {
         setErrorMessage(response?.message || dictionary["registrationFailed"]);
       }

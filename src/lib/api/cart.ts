@@ -62,8 +62,8 @@ interface PlaceOrderResponse {
   error: number;
   message: string;
   data: {
-    order_id: string;
-    website_items: Array<{
+    order_id?: string;
+    website_items?: Array<{
       website_item_id: string;
       stock_uom: string;
       website_item_type: string;
@@ -107,6 +107,7 @@ interface PlaceOrderResponse {
       product_options: Array<unknown>;
       qty_in_cart: number;
     }>;
+    redirect_url?: string;
     sub_total: number;
     delivery_charges: number;
     grand_total: number;

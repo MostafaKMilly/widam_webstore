@@ -37,7 +37,7 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
   const [selectedGeofenceId, setSelectedGeofenceId] = useState<string | null>(
     null
   );
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading: isUserLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: () => getUser(),
   });
@@ -53,6 +53,8 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
       alert("Failed to update geofence. Please try again.");
     },
   });
+
+  const [isLoading, setIsLoading] = useState(false); // Added loading state
 
   const initMap = (latitude: number, longitude: number) => {
     if (mapRef.current) {
@@ -266,18 +268,26 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
 
   const handleConfirmLocation = async () => {
     if (markerRef.current) {
-      const confirmedLocation = markerRef.current.getPosition();
-      console.log("Confirmed location:", confirmedLocation?.toString());
+      setIsLoading(true); // Start loading
+      try {
+        const confirmedLocation = markerRef.current.getPosition();
+        console.log("Confirmed location:", confirmedLocation?.toString());
 
-      if (confirmedLocation) {
-        const latitude = confirmedLocation.lat();
-        const longitude = confirmedLocation.lng();
+        if (confirmedLocation) {
+          const latitude = confirmedLocation.lat();
+          const longitude = confirmedLocation.lng();
 
-        onSelectLocation?.(latitude.toString(), longitude.toString());
+          onSelectLocation?.(latitude.toString(), longitude.toString());
 
-        if (selectedGeofenceId && !user?.data) {
-          await updateGefenceMutation.mutateAsync(selectedGeofenceId);
+          if (selectedGeofenceId && !user?.data) {
+            await updateGefenceMutation.mutateAsync(selectedGeofenceId);
+          }
         }
+      } catch (error) {
+        console.error("Error confirming location:", error);
+        alert("Failed to confirm location. Please try again.");
+      } finally {
+        setIsLoading(false); // End loading
       }
     } else {
       alert("Please select a location before confirming.");
@@ -342,6 +352,7 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
                       onLocateMe={handleLocateMe}
                       onConfirmLocation={handleConfirmLocation}
                       onSkip={handleSkip}
+                      isLoading={isLoading} // Pass loading state
                     />
                   </div>
                 </div>

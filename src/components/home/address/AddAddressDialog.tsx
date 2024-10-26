@@ -136,20 +136,28 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
       return;
     }
 
-    const newAddress: Omit<Address, "address_id"> = {
+    const newAddress: Partial<Omit<Address, "address_id">> = {
       address_title: addressTitle,
       address_type: selectedLabel,
       street_no: streetNo,
       building_no: buildingNo,
-      city: "",
+      city: {
+        city_id: "",
+        city_name: "",
+      },
       zone: zoneNumber,
-      area: "",
-      country: "",
+      area: {
+        area_id: "",
+        area_name: "",
+      },
+      country: {
+        country_id: "",
+        country_name: "",
+      },
       latitude: currentLocation.latitude,
       longitude: currentLocation.longitude,
       phone: mobileNo,
-      email_id: "",
-      is_shipping_address: isDefaultAddress ? 1 : 0,
+      preferred_shipping_address: isDefaultAddress ? 1 : 0,
       full_name: fullName,
       landmark: "",
     };
@@ -158,7 +166,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
     setErrorMessage("");
 
     try {
-      await onAddAddress(newAddress);
+      await onAddAddress(newAddress as Address);
       setIsSubmitting(false);
       onClose();
       handleReset();
@@ -239,7 +247,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
           </div>
 
           <div className="space-y-4">
-            <div className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
+            <div className="text-[#0b0a0a] text-xl font-bold font-montserrat">
               {dictionary["addressTitle"]}
             </div>
 
@@ -251,7 +259,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
             />
 
             <div className="pt-4">
-              <div className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
+              <div className="text-[#0b0a0a] text-xl font-bold font-montserrat">
                 {dictionary["addressDetails"]}
               </div>
 
@@ -294,7 +302,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
               </Switch>
             </div>
 
-            <div className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
+            <div className="text-[#0b0a0a] text-xl font-bold font-montserrat">
               {dictionary["receiverInformation"]}
             </div>
 
@@ -332,7 +340,7 @@ const AddAddressDialog: React.FC<AddAddressDialogProps> = ({
               </div>
             </div>
 
-            <h2 className="text-[#0b0a0a] text-xl font-bold font-['Montserrat']">
+            <h2 className="text-[#0b0a0a] text-xl font-bold font-montserrat">
               {dictionary["addressLabel"]}
             </h2>
             <AddressLabelComponent

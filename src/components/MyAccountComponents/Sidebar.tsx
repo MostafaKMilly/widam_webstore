@@ -5,10 +5,12 @@ import clsx from "clsx";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import useUserStore from "@/lib/store/userStore"; // Import the user store
-import { useQuery } from "@tanstack/react-query";
+import useCartStore from "@/lib/store/cartStore"; // Import the cart store
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUser } from "@/lib/api/profile";
 import { useDictionary } from "@/lib/hooks/useDictionary";
 import { updateLanguage } from "@/lib/actions/updateLanguage";
+import { signout } from "@/lib/api/login";
 
 interface MenuItemProps {
   icon: string;
@@ -37,7 +39,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
   return (
     <Link
       href={href}
-      className="flex items-center w-full"
+      className="flex items-center w-full relative"
       onClick={handleClick}
     >
       {isActive && (
@@ -75,6 +77,8 @@ const Separator: React.FC = () => (
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: user, isLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: () => getUser(),
@@ -116,6 +120,23 @@ const Sidebar: React.FC = () => {
   const handleLanguageChange = (selectedLanguage: string) => {
     setLanguage(selectedLanguage);
     updateLanguage(selectedLanguage as "en" | "ar");
+  };
+
+  const handleSignOut = async () => {
+    try {
+      // Clear React Query cache
+      await queryClient.clear();
+      await signout();
+      useUserStore.getState().clearUser();
+      useCartStore.setState({ items: [] });
+
+      localStorage.removeItem("user-storage");
+      localStorage.removeItem("cart-storage");
+
+      router.push("/");
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
   };
 
   return (
@@ -165,6 +186,15 @@ const Sidebar: React.FC = () => {
               {dict.dictionary.country}
             </div>
             <div className="text-lg text-sky-900">{dict.dictionary.qatar}</div>
+          </div>
+
+          <div className="px-4">
+            <button
+              onClick={handleSignOut}
+              className="mt-6 w-full  py-2 bg-primary text-white rounded transition-colors"
+            >
+              {dict.dictionary.signOut}
+            </button>
           </div>
         </nav>
       </aside>

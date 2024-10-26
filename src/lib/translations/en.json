@@ -168,5 +168,6 @@
   "remove": "Remove item",
   "orderPlacementFailed": "Failed to place the order.",
   "orderPlacementError": "An error occurred while placing the order.",
-  "orderPlacedSuccessfully": "Order placed successfully!"
+  "orderPlacedSuccessfully": "Order placed successfully!",
+  "signOut" : "Signout"
 }

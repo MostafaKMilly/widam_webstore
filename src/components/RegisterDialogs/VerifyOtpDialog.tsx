@@ -80,10 +80,12 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
         otp: enteredOtp.trim(),
       });
 
+      console.log(response , "mostafa")
       if (response && response.status_code === 200) {
         const user = response.data.token
           ? await getUser(response.data.token)
           : null;
+          console.log(user, "user")
         if (user) {
           setUser({
             email: user.data.email,
@@ -195,7 +197,7 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
                   ref={(el) => {
                     inputRefs.current[index] = el;
                   }}
-                  className="w-[56.247px] h-[68.929px] text-center  rounded-md bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="w-[56.247px] h-[68.929px] text-center  rounded-md bg-white shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   aria-label={`OTP Digit ${index + 1}`}
                 />
               ))}

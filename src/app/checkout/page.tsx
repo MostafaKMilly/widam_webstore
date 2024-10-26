@@ -2,20 +2,18 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getQuotationDetails,
   updateQuotation,
   placeOrder,
-  QuotationIdResponse,
   Qutation,
 } from "@/lib/api/cart";
 import { getPaymentMethods } from "@/lib/api/paymentMethods";
 import useCartStore from "@/lib/store/cartStore";
 import useUserStore from "@/lib/store/userStore";
 import getUtils from "@/lib/queries/getUtils";
-import { useDictionary } from "@/lib/hooks/useDictionary";
 import PaymentMethods from "@/components/layout/Footer/PaymentMethods";
 import DefaultAddress from "@/components/home/address/DefaultAddress";
 import { useRouter } from "next/navigation";
@@ -26,11 +24,12 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { getGeofenceDetails } from "@/lib/api/geofences";
 import TimeSlotSelectionDialog from "@/components/cart/TimeSlotSelectionDialog";
+import { LoadingComponent } from "@/components/layout/LoadingComponent";
+import { ErrorComponent } from "@/components/layout/ErrorComponent";
 
 const CheckoutPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const { items: cartItems, loadCart, clearCart } = useCartStore(); // Destructure clearCart
-  const { dictionary } = useDictionary();
+  const { items: cartItems, loadCart, clearCart } = useCartStore();
   const { user } = useUserStore();
   const router = useRouter();
   const [selectedPaymentOption, setSelectedPaymentOption] = useState<
@@ -75,7 +74,6 @@ const CheckoutPage: React.FC = () => {
     select: (res) => res?.data,
   });
 
-  // Extract values from the API response
   const subtotal = data?.data?.total || 0;
   const shippingFee =
     data?.data?.cart_content?.normal_delivery.delivery_charges || 0;
@@ -86,31 +84,105 @@ const CheckoutPage: React.FC = () => {
   const updateQuotationMutation = useMutation({
     mutationFn: updateQuotation,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["cart"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
     onError: (error) => {
       console.error("Failed to update quotation:", error);
     },
   });
 
+  const popupRef = useRef<Window | null>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  useEffect(() => {
+    let popupInterval: any;
+
+    console.log(isPopupOpen , popupRef)
+    if (isPopupOpen && popupRef.current) {
+      popupInterval = setInterval(() => {
+        console.log("Popup is open" , !popupRef.current || popupRef.current.closed);
+        try {
+          if (!popupRef.current || popupRef.current.closed) {
+            clearInterval(popupInterval);
+            setIsPopupOpen(false);
+            return;
+          }
+
+          const popupUrl = popupRef.current.location.href;
+
+          console.log(popupUrl);
+          if (popupUrl.includes("qpay.webhook.ipn_status")) {
+            // The popup has navigated to the payment status URL
+            // Now we can try to read the response
+            const responseText = popupRef.current.document.body.innerText;
+
+            const responseJson = JSON.parse(responseText);
+
+            // Process the responseJson
+            const { payment_success, message, order_id } = responseJson;
+
+            if (payment_success === true) {
+              toast.success("Payment was successfully processed.");
+              // Optionally, navigate to order confirmation
+              router.push(`/order-confirmation?order_id=${order_id}`);
+            } else if (payment_success === false) {
+              toast.error(`Payment failed: ${message}`);
+            }
+
+            // Close the popup window
+            if (popupRef.current && !popupRef.current.closed) {
+              popupRef.current.close();
+              setIsPopupOpen(false);
+            }
+
+            // Clear the interval
+            clearInterval(popupInterval);
+          }
+        } catch (error) {
+          // The popup is on a different origin, so we cannot access its location
+          console.log(error)
+        }
+      }, 1000);
+    }
+
+    return () => {
+      clearInterval(popupInterval);
+    };
+  }, [isPopupOpen, router]);
+
   const placeOrderMutation = useMutation({
     mutationFn: placeOrder,
     onSuccess: async (res) => {
       console.log(res);
       if (res) {
-        try {
-          // Clear the cart
-          clearCart(data?.data.quotation_id || "");
-          // Invalidate cart queries
-          queryClient.invalidateQueries({ queryKey: ["cart"] });
-        } catch (error) {
-          console.error("Error clearing cart after order placement:", error);
-          toast.error("Order placed, but failed to clear the cart.");
-        }
+        if (res.data.redirect_url) {
+          // Open the redirect_url in a popup window
+          const popup = window.open(
+            res.data.redirect_url,
+            "Payment",
+            "width=600,height=700"
+          );
+          if (popup) {
+            popupRef.current = popup;
+            setIsPopupOpen(true);
+          } else {
+            toast.error(
+              "Failed to open payment window. Please disable popup blockers and try again."
+            );
+          }
+        } else if (res.data.order_id) {
+          try {
+            clearCart(data?.data.quotation_id || "");
+            queryClient.invalidateQueries({ queryKey: ["cart"] });
+          } catch (error) {
+            console.error("Error clearing cart after order placement:", error);
+            toast.error("Order placed, but failed to clear the cart.");
+          }
 
-        router.push(`/order-confirmation?order_id=${res.data.order_id}`);
+          router.push(`/order-confirmation?order_id=${res.data.order_id}`);
+        } else {
+          toast.error("Unexpected response from the server.");
+        }
       } else {
         toast.error("Failed to place order. Please try again.");
       }
@@ -171,17 +243,9 @@ const CheckoutPage: React.FC = () => {
   }, [geofenceData]);
 
   if (isLoading || utilsLoading || paymentMethodsLoading)
-    return <div>Loading...</div>;
-  if (
-    error ||
-    utilsError ||
-    paymentMethodsError ||
-    !data ||
-    !utilsData ||
-    !paymentMethodsData ||
-    !geofenceData
-  )
-    return <div>Error loading checkout data.</div>;
+    return <LoadingComponent />;
+  if (error || utilsError || paymentMethodsError)
+    return <ErrorComponent message="Error loading checkout data." />;
 
   const handleChangeAddress = () => {
     setIsAddressDialogOpen(true);
@@ -195,9 +259,9 @@ const CheckoutPage: React.FC = () => {
         time_slot: selectedTimeSlot?.time_slot_id,
       });
 
-      const res = await placeOrderMutation.mutateAsync({
+      await placeOrderMutation.mutateAsync({
         payment_method: selectedPaymentOption!,
-        quotation_id: data.data?.quotation_id!,
+        quotation_id: data?.data?.quotation_id!,
         create_token: "0",
         _lang: "en",
       });
@@ -206,8 +270,9 @@ const CheckoutPage: React.FC = () => {
       toast.error("An error occurred while placing the order.");
     }
   };
+
   const paymentOptions = paymentMethodsData
-    .filter(
+    ?.filter(
       (method) =>
         method.enabled === 1 &&
         method.title !== "Google Pay" &&
@@ -215,7 +280,7 @@ const CheckoutPage: React.FC = () => {
     )
     .sort((a, b) => a.priority - b.priority);
 
-  const normalDelivery = geofenceData.delivery_methods.find(
+  const normalDelivery = geofenceData?.delivery_methods.find(
     (method) => method.type === "Normal Delivery"
   );
 
@@ -280,7 +345,7 @@ const CheckoutPage: React.FC = () => {
           <PaymentMethod
             onOptionSelect={handlePaymentMethodChange}
             selectedOption={selectedPaymentOption}
-            paymentOptions={paymentOptions}
+            paymentOptions={paymentOptions || []}
           />
 
           {/* Order Review Section */}
@@ -358,7 +423,7 @@ const CheckoutPage: React.FC = () => {
             serviceFee={serviceFee}
             grandTotal={grandTotal}
             onPlaceOrder={handlePlaceOrder}
-            loading={placeOrderMutation.isPending}
+            loading={placeOrderMutation.isPending || isPopupOpen}
           />
         </div>
       </div>
