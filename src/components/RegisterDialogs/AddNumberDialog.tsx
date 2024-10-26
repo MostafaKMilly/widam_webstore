@@ -99,7 +99,6 @@ const AddNumberDialog: React.FC<AddNumberDialogProps> = ({
             <PhoneInput
               value={phoneNumber}
               onChange={handlePhoneNumberChange}
-              disabled={isLoading} // Disable input while loading
             />
 
             {errorMessage && (
