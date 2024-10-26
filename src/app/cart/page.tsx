@@ -10,7 +10,6 @@ import {
 } from "@/lib/api/cart";
 import useCartStore from "@/lib/store/cartStore";
 import useUserStore from "@/lib/store/userStore";
-import CartItemComponent from "@/components/cart/CartItem";
 import getUtils from "@/lib/queries/getUtils";
 import { useDictionary } from "@/lib/hooks/useDictionary";
 import PaymentMethods from "@/components/layout/Footer/PaymentMethods";
@@ -19,6 +18,7 @@ import AddressSelectionDialog from "@/components/cart/AddressSelectionDialog";
 import { useRouter } from "next/navigation";
 import { LoadingComponent } from "@/components/layout/LoadingComponent";
 import { ErrorComponent } from "@/components/layout/ErrorComponent";
+import CartItemComponent from "@/components/cart/CartItem";
 
 interface Coupon {
   title: string;
