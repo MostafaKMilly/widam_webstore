@@ -18,7 +18,7 @@ import AddressSelectionDialog from "@/components/cart/AddressSelectionDialog";
 import { useRouter } from "next/navigation";
 import { LoadingComponent } from "@/components/layout/LoadingComponent";
 import { ErrorComponent } from "@/components/layout/ErrorComponent";
-import CartItemComponent from "@/components/cart/CartItem";
+import CartItemComponent from "@/components/cart/CartItemComponent";
 
 interface Coupon {
   title: string;
