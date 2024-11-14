@@ -24,6 +24,13 @@ const DeliverSelection: React.FC = () => {
     queryFn: () => getUser(),
   });
 
+  const { data, isLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getUser(),
+  });
+
+  const isLoggin = !!data?.data;
+
   const user = useUserStore((state) => state.user);
 
   const handleOpenLocationSelection = () => {
@@ -65,7 +72,7 @@ const DeliverSelection: React.FC = () => {
       <div
         className="flex items-center gap-2.5 cursor-pointer"
         onClick={() => {
-          if (user) {
+          if (isLoggin) {
             handleOpenAddressSelection();
           } else {
             handleOpenLocationSelection();
@@ -91,7 +98,7 @@ const DeliverSelection: React.FC = () => {
       </div>
 
       {/* AddressSelectionDialog for Authenticated Users */}
-      {user && mounted && (
+      {isLoggin && mounted && (
         <AddressSelectionDialog
           isOpen={isAddressSelectionOpen}
           onClose={handleCloseAddressSelection}
@@ -99,7 +106,7 @@ const DeliverSelection: React.FC = () => {
       )}
 
       {/* LocationSelection Dialog for Unauthenticated Users or No Preferred Address */}
-      {!user && mounted && (
+      {!isLoggin && mounted && (
         <LocationSelection
           isOpen={isLocationSelectionOpen}
           onClose={handleCloseLocationSelection}

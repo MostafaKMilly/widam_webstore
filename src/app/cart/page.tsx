@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { LoadingComponent } from "@/components/layout/LoadingComponent";
 import { ErrorComponent } from "@/components/layout/ErrorComponent";
 import CartItemComponent from "@/components/cart/CartItemComponent";
+import { applyCouponToCart, getCouponCodes } from "@/lib/api/couponCodes";
 
 interface Coupon {
   title: string;
@@ -28,23 +29,27 @@ interface Coupon {
 
 const Coupons: React.FC = () => {
   const [couponCode, setCouponCode] = useState("");
-  const [couponData, setCouponData] = useState<Coupon[]>([
-    {
-      title: "Get 30% off on your first order!",
-      description: "Order now to avail the discount",
-      code: "WIDAM-2022",
-    },
-    {
-      title: "Get 30% off on your first order!",
-      description: "Order now to avail the discount",
-      code: "WIDAM-2022",
-    },
-  ]);
 
-  const handleApplyCoupon = (code: string) => {
-    console.log(`Applying coupon: ${code}`);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["couponCodes"],
+    queryFn: () => getCouponCodes(),
+  });
 
-    toast(`Coupon ${code} applied!`);
+  const coupons: Coupon[] = data?.data
+    ? data.data.map((couponCode) => ({
+        title: couponCode.description, // Adjust if you have a title field
+        description: couponCode.description,
+        code: couponCode.coupon_code_id,
+      }))
+    : [];
+
+  const handleApplyCoupon = async (code: string) => {
+    try {
+      await applyCouponToCart(code);
+      toast.success(`Coupon ${code} applied!`);
+    } catch (error) {
+      toast.error(`Failed to apply coupon ${code}.`);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,6 +57,9 @@ const Coupons: React.FC = () => {
     handleApplyCoupon(couponCode);
     setCouponCode("");
   };
+
+  if (isLoading) return <div>Loading coupons...</div>;
+  if (error) return <div>Error loading coupons.</div>;
 
   return (
     <div className="bg-gray-100 p-6 rounded shadow mb-6 bg-[#F6F6F6]">
@@ -72,31 +80,37 @@ const Coupons: React.FC = () => {
         </div>
       </form>
 
-      {couponData.map((coupon, index) => (
-        <article
-          key={index}
-          className="flex flex-col px-3.5 pt-5 pb-px mt-6 w-full text-black bg-white rounded-sm border-solid shadow-sm border-[0.5px] border-zinc-100"
-        >
-          <h2 className="self-start font-bold">
-            <span className="capitalize">Get</span> {coupon.title}
-          </h2>
-          <p className="self-start mt-3.5 text-base font-medium">
-            {coupon.description}
-          </p>
-          <div className="flex flex-wrap gap-5 justify-between mt-8 text-sky-800 whitespace-nowrap">
-            <div className="px-8 py-3 font-medium rounded-sm border border-blue-500 border-dashed bg-neutral-100">
-              {coupon.code}
+      {coupons.length > 0 ? (
+        coupons.map((coupon, index) => (
+          <article
+            key={index}
+            className="flex flex-col px-3.5 pt-5 pb-px mt-6 w-full text-black bg-white rounded-sm border-solid shadow-sm border-[0.5px] border-zinc-100"
+          >
+            <h2 className="self-start font-bold">
+              <span className="capitalize">Get</span> {coupon.title}
+            </h2>
+            <p className="self-start mt-3.5 text-base font-medium">
+              {coupon.description}
+            </p>
+            <div className="flex flex-wrap gap-5 justify-between mt-8 text-sky-800 whitespace-nowrap">
+              <div className="px-8 py-3 font-medium rounded-sm border border-blue-500 border-dashed bg-neutral-100">
+                {coupon.code}
+              </div>
+              <button
+                onClick={() => handleApplyCoupon(coupon.code)}
+                className="my-auto font-bold"
+              >
+                Apply
+              </button>
             </div>
-            <button
-              onClick={() => handleApplyCoupon(coupon.code)}
-              className="my-auto font-bold"
-            >
-              Apply
-            </button>
-          </div>
-          <hr className="shrink-0 mt-5 max-w-full bg-white border-white w-full" />
-        </article>
-      ))}
+            <hr className="shrink-0 mt-5 max-w-full bg-white border-white w-full" />
+          </article>
+        ))
+      ) : (
+        <div className="mt-4 text-gray-500 text-center">
+          No coupons available at this time.
+        </div>
+      )}
     </div>
   );
 };
@@ -202,123 +216,142 @@ const CartPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 mt-6 mb-12">
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-2/3">
-          <div className="flex gap-4 text-blue-600 mb-4">
-            <a href="/" className="hover:underline">
-              Home
-            </a>
-            <span>/</span>
-            <span>Cart</span>
-          </div>
+      {cartItems.length === 0 ? (
+        // **Empty Cart Message and Continue Shopping Button**
+        <div className="flex flex-col items-center justify-center h-full py-20">
+          <h2 className="text-3xl font-semibold mb-4">Your Cart is Empty</h2>
+          <p className="text-gray-600 mb-6">
+            Looks like you haven&apos;t added anything to your cart yet.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-6 py-3 bg-primary text-white rounded transition"
+          >
+            Continue Shopping
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-2/3">
+            <div className="flex gap-4 text-blue-600 mb-4">
+              <a href="/" className="hover:underline">
+                Home
+              </a>
+              <span>/</span>
+              <span>Cart</span>
+            </div>
 
-          <h2 className="text-3xl font-semibold mt-8 mb-12">
-            Your Cart Details
-          </h2>
+            <h2 className="text-3xl font-semibold mt-8 mb-12">
+              Your Cart Details
+            </h2>
 
-          <div className="flex flex-col relative gap-4 bg-[#F4FBFB] p-4 border border-[#BEBEBE] shadow-sm">
-            <div className="w-full h-16 flex items-center justify-between gap-4 mb-6">
-              <div className="text-[#232323] text-[24px] font-semibold">
-                Scheduled Delivery
-              </div>
+            <div className="flex flex-col relative gap-4 bg-[#F4FBFB] p-4 border border-[#BEBEBE] shadow-sm">
+              <div className="w-full h-16 flex items-center justify-between gap-4 mb-6">
+                <div className="text-[#232323] text-[24px] font-semibold">
+                  Scheduled Delivery
+                </div>
 
-              <div className="flex gap-4 items-center">
-                <span className="text-[#232323] text-md font-bold tracking-wide">
-                  {dict.earlies_delivery}
-                </span>
-                <img src="/icons/delivery-icon copy.svg" alt="Delivery Icon" />
-                <div className="w-[250px] h-16 bg-[#F7F6FA] rounded-sm border border-[#ECEAF0] flex items-center px-2">
-                  <div className="flex gap-2.5 items-center font-bold leading-5">
-                    <div className="flex w-fit px-1 h-[36.782px] bg-[#F7F6FA] rounded-sm items-center gap-1">
-                      <div className="w-[34px] h-[33px] bg-white rounded-sm p-6 flex items-center justify-center">
-                        <p className="text-[#ef3e42] text-xs text-center">
-                          {convertedDate}
-                        </p>
-                      </div>
-                      <div className="text-[#232323] text-[12px] font-bold">
-                        {utilsData?.data.time_slot.time_formatted}
+                <div className="flex gap-4 items-center">
+                  <span className="text-[#232323] text-md font-bold tracking-wide">
+                    {dict.earlies_delivery}
+                  </span>
+                  <img
+                    src="/icons/delivery-icon copy.svg"
+                    alt="Delivery Icon"
+                  />
+                  <div className="w-[250px] h-16 bg-[#F7F6FA] rounded-sm border border-[#ECEAF0] flex items-center px-2">
+                    <div className="flex gap-2.5 items-center font-bold leading-5">
+                      <div className="flex w-fit px-1 h-[36.782px] bg-[#F7F6FA] rounded-sm items-center gap-1">
+                        <div className="w-[34px] h-[33px] bg-white rounded-sm p-6 flex items-center justify-center">
+                          <p className="text-[#ef3e42] text-xs text-center">
+                            {convertedDate}
+                          </p>
+                        </div>
+                        <div className="text-[#232323] text-[12px] font-bold">
+                          {utilsData?.data.time_slot.time_formatted}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-red-500 text-white absolute -top-6 px-4 py-2 rounded mb-4">
-              {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
-            </div>
-            {cartItems.map((item) => (
-              <CartItemComponent key={item.website_item_id} item={item} />
-            ))}
-
-            <div className="flex justify-between text-xl font-semibold mt-6">
-              <span>Sub Total</span>
-
-              <span className="text-[#888888] font-medium">
-                {subtotal.toFixed(2)} QAR
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full lg:w-1/3">
-          <Coupons />
-
-          <div className="bg-gray-100 p-6 rounded shadow mb-6 bg-[#F8FBFF]">
-            <div className="flex justify-between text-xl font-semibold">
-              <div>
-                <span className="text-[#444444] text-[18px] font-bold  capitalize">
-                  Order Total
-                </span>
-                <span className="text-[#444444] text-[18px] font-medium  capitalize">
-                  {" ( "}
-                </span>
-
-                <span className="text-[#aaaaaa] text-[16px] font-medium  capitalize">
-                  {cartItems.length}{" "}
-                  {cartItems.length === 1 ? " item" : " items"}
-                </span>
-                <span className="text-[#444444] text-[18px] font-medium  capitalize">
-                  {" )"}
-                </span>
+              <div className="bg-red-500 text-white absolute -top-6 px-4 py-2 rounded mb-4">
+                {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
               </div>
-              <div>
-                <span className="text-[#232323] text-[16px] font-bold  capitalize">
-                  {subtotal.toFixed(2)}
-                </span>
-                <span className="text-[#232323] text-[16px] font-bold  capitalize">
-                  {" "}
-                </span>
-                <span className="text-[#232323] text-base font-medium  capitalize">
-                  QAR
+              {cartItems.map((item) => (
+                <CartItemComponent key={item.website_item_id} item={item} />
+              ))}
+
+              <div className="flex justify-between text-xl font-semibold mt-6">
+                <span>Sub Total</span>
+
+                <span className="text-[#888888] font-medium">
+                  {subtotal.toFixed(2)} QAR
                 </span>
               </div>
             </div>
-            <div className="flex justify-center">
-              <button
-                onClick={handleCheckout}
-                disabled={updateQuotationMutation.isPending}
-                className={`mx-auto self-center mt-12 w-[280px] text-white py-3 rounded ${
-                  updateQuotationMutation.isPending
-                    ? "bg-slate-400 cursor-not-allowed"
-                    : "bg-[#0050b3]"
-                }`}
-              >
-                {updateQuotationMutation.isPending
-                  ? "Processing..."
-                  : "Checkout"}
-              </button>
-            </div>
           </div>
 
-          <h3 className="text-xl text-center font-semibold mt-8 mb-4">
-            Available Payment Methods
-          </h3>
-          <div className="flex items-center justify-center gap-4">
-            <PaymentMethods />
+          <div className="w-full lg:w-1/3">
+            <Coupons />
+
+            <div className="bg-gray-100 p-6 rounded shadow mb-6 bg-[#F8FBFF]">
+              <div className="flex justify-between text-xl font-semibold">
+                <div>
+                  <span className="text-[#444444] text-[18px] font-bold capitalize">
+                    Order Total
+                  </span>
+                  <span className="text-[#444444] text-[18px] font-medium capitalize">
+                    {" ( "}
+                  </span>
+
+                  <span className="text-[#aaaaaa] text-[16px] font-medium capitalize">
+                    {cartItems.length}{" "}
+                    {cartItems.length === 1 ? " item" : " items"}
+                  </span>
+                  <span className="text-[#444444] text-[18px] font-medium capitalize">
+                    {" )"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#232323] text-[16px] font-bold capitalize">
+                    {subtotal.toFixed(2)}
+                  </span>
+                  <span className="text-[#232323] text-[16px] font-bold capitalize">
+                    {" "}
+                  </span>
+                  <span className="text-[#232323] text-base font-medium capitalize">
+                    QAR
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <button
+                  onClick={handleCheckout}
+                  disabled={updateQuotationMutation.isPending}
+                  className={`mx-auto self-center mt-12 w-[280px] text-white py-3 rounded ${
+                    updateQuotationMutation.isPending
+                      ? "bg-slate-400 cursor-not-allowed"
+                      : "bg-[#0050b3]"
+                  }`}
+                >
+                  {updateQuotationMutation.isPending
+                    ? "Processing..."
+                    : "Checkout"}
+                </button>
+              </div>
+            </div>
+
+            <h3 className="text-xl text-center font-semibold mt-8 mb-4">
+              Available Payment Methods
+            </h3>
+            <div className="flex items-center justify-center gap-4">
+              <PaymentMethods />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <AddressSelectionDialog
         isOpen={isAddressDialogOpen}
