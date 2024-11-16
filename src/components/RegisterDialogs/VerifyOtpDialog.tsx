@@ -80,27 +80,25 @@ const VerifyOtpDialog: React.FC<VerifyOtpDialogProps> = ({
         otp: enteredOtp.trim(),
       });
 
-      console.log(response , "mostafa")
+      console.log(response, "mostafa");
       if (response && response.status_code === 200) {
-        const user = response.data.token
-          ? await getUser(response.data.token)
-          : null;
-          console.log(user, "user")
-        if (user) {
+        if (response.data.token) {
           setUser({
-            email: user.data.email,
-            mobile_no: user.data.mobile_no,
+            email: response.data.email,
+            mobile_no: response.data.mobile_no,
             token: response.data.token,
             user_id: response.data.user_id,
             user_name: response.data.user_id,
             profile_details: {
               customer_details: {
-                customer_name: user.data.first_name,
-                nationality: user.data.nationality.country_name,
-                salutation: user.data.salutation,
+                customer_name: response.data.profile_details.first_name,
+                nationality:
+                  response.data.profile_details.customer_details.nationality,
+                salutation:
+                  response.data.profile_details.customer_details.salutation,
               },
-              first_name: user.data.first_name,
-              last_name: user.data.last_name,
+              first_name: response.data.profile_details.first_name,
+              last_name: response.data.profile_details.last_name,
             },
           });
           onLoginSuccess();

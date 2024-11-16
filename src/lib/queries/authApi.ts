@@ -17,9 +17,28 @@ interface VerifyOtpResponse {
   error: number;
   message: string;
   data: {
-    user_id: string;
     token: string;
+    user_id: string;
+    user_name: string;
+    email: string;
+    mobile_no: string;
+    profile_details: {
+      first_name: string;
+      last_name: string;
+      customer_details: {
+        customer_name: string;
+        salutation: string;
+        nationality: string;
+      };
+    };
+    validation: {
+      mobile_number: string;
+      user_exist: boolean;
+      user_enabled: boolean;
+      OTP_valid: boolean;
+    };
   };
+  _server_messages: string;
 }
 
 interface RegisterResponse {
@@ -115,7 +134,14 @@ async function verifyOtp(
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
     const result: VerifyOtpResponse = await response.json();
+    const cookiesStore = cookies();
+    const token = cookiesStore.get("token")?.value;
+
+    if (result.data.token && !token) {
+      cookiesStore.set("token", result.data.token);
+    }
     return result;
   } catch (error) {
     console.error("Error verifying OTP:", error);
